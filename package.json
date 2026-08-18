@@ -6,6 +6,6 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "dev": "wrangler pages dev public --port 3300"
+    "dev": "node dev-server.js"
   }
 }

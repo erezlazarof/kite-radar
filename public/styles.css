@@ -966,3 +966,44 @@ body.busy .status::after {
   background: var(--surface-3); color: var(--text-3);
   border-color: var(--border); border-style: dashed;
 }
+
+/* ============================ מדידה חיה ============================ */
+/* פיצ'ר האמינות. הוא לא צובע את הכרטיס — הוא אומר מה באמת נמדד,
+   וכשהוא חלוק על המודל, המסקנה היא שאיננו יודעים ולא שיש תשובה אחרת. */
+
+.measured {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 7px;
+  margin-block-start: 10px; padding: 7px 10px;
+  border-radius: 9px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  font-size: 12.5px; color: var(--text-2);
+}
+.m-dot {
+  inline-size: 7px; block-size: 7px; border-radius: 50%;
+  background: var(--ok); flex: 0 0 auto; align-self: center;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .m-dot { animation: m-pulse 2.4s ease-in-out infinite; }
+  @keyframes m-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--ok) 8%, transparent); } }
+}
+.m-label { font-weight: 700; color: var(--text); letter-spacing: .01em; }
+.m-kt { font-size: 19px; font-weight: 800; color: var(--text); line-height: 1; }
+.m-unit { font-size: 11.5px; color: var(--text-3); }
+.m-gust { font-size: 11.5px; color: var(--text-3); }
+.m-delta {
+  font-size: 11.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.m-delta.up   { color: var(--go-ink);       border-color: color-mix(in srgb, var(--go) 35%, transparent); }
+.m-delta.down { color: var(--marginal-ink); border-color: color-mix(in srgb, var(--marginal) 35%, transparent); }
+.m-delta.same { color: var(--text-3); }
+.m-age { margin-inline-start: auto; font-size: 11px; color: var(--text-3); white-space: nowrap; }
+
+.lv-blocked .measured, .lv-unknown .measured { opacity: .6; }
+.m-vs { font-size: 11.5px; color: var(--text-3); }
+.m-vs .num { font-weight: 800; }
+.m-vs.up   .num { color: var(--go-ink); }
+.m-vs.down .num { color: var(--marginal-ink); }
+.m-vs.same .num { color: var(--text-2); }

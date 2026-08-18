@@ -396,13 +396,31 @@ test('gear advice never appears on a no-go card', async () => {
   assert.ok(renderDetail(spot('bat-yam'), green, { prefs }).includes('מה לקחת'));
 });
 
-test('candidate spots — no kite evidence means no green', () => {
-  const cands = REG.spots.filter(s => s.status === 'candidate');
-  assert.ok(cands.length > 0, 'the registry should carry some candidate spots');
-  for (const s of cands) {
-    const v = scoreSpot(s, fc({ kt: 19, gust: 22, dir: s.shore_normal_deg + 40 }), null, Date.UTC(2026, 10, 18, 9), {});
-    assert.notEqual(v.level, 'green', s.id);
+test('the shipped registry carries only established spots with live coverage', () => {
+  // הרג'יסטר נגזם: מדידה חיה היא תנאי הכרחי, ולא תוספת.
+  for (const s of REG.spots) {
+    assert.equal(s.status, 'established', `${s.id} should not ship as a candidate`);
+    const live = s.live_stations || {};
+    assert.ok(live.ims || live.meteotech, `${s.id} has no live wind source — it should not be in the registry`);
+    if (live.ims) {
+      assert.ok(live.distance_km != null && live.distance_km <= 12,
+        `${s.id}: station ${live.ims} is ${live.distance_km}km away — too far to stand for this beach`);
+    }
   }
+});
+
+test('the candidate rule still holds for anything added later', () => {
+  // הכלל עצמו נשאר מכוסה גם כשאין מועמד ברג'יסטר: ספוט שגיאומטריית
+  // החוף שלו לא אומתה בידי אדם לא מגיע לירוק, נקודה.
+  const base = REG.spots.find(s => s.region === 'center');
+  const cand = { ...base, id: 'x-cand', status: 'candidate' };
+  const mine = { ...base, id: 'x-mine', source: 'user' };
+  const wind = fc({ kt: 19, gust: 22, dir: base.shore_normal_deg + 40 });
+  const now = Date.UTC(2026, 10, 18, 9);
+  assert.equal(scoreSpot(base, wind, null, now, {}).level, 'green', 'the control case is green');
+  assert.notEqual(scoreSpot(cand, wind, null, now, {}).level, 'green');
+  assert.notEqual(scoreSpot(mine, wind, null, now, {}).level, 'green');
+  assert.ok(scoreSpot(mine, wind, null, now, {}).flags.includes('unverified_spot'));
 });
 
 test('every spot has a defensible shore normal', () => {

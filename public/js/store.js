@@ -13,7 +13,7 @@ export const state = {
   spots: [],
   defaults: null,
   forecast: null,      // { data:{spotId:…}, fetchedAt, ok, error }
-  obs: null,
+  obs: null,          // { payload, fetchedAt, ok, restored, error }
   models: {},          // spotId → { data, fetchedAt }
   day: 0,
   region: 'all',

@@ -25,6 +25,9 @@ export const STALE_FORECAST_MIN = 90;
 export const MODEL_SPREAD_DEMOTE_KT = 8;
 export const MIN_RIDEABLE_KT = 12;
 
+/** פער בין מדוד לחזוי שמעליו אנחנו מודים שאיננו יודעים */
+export const OBS_DISAGREE_KT = 5;
+
 /** ספי ניקוד המהירות שמשמשים כשער. תואמים ל-12 ו-15 קשר אפקטיביים. */
 export const SPEED_GATE = { noGo: 40, marginal: 60 };
 
@@ -68,6 +71,7 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
       ...base, level: 'blocked', score: null, window, gate,
       dirCls: dirB.cls, dirNote: null,
       components: { speed: null, direction: null, gust: null, water: null },
+      measured: null,
       flags: [], confidence: { level: 'low', modelSpreadKt: null, runDeltaKt: null },
     };
     return finish(v, spot);
@@ -118,6 +122,29 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
   // כלל 1: אין מסלול מנתון ישן אל ירוק
   if (base.freshness.stale) { level = cap(level, 'yellow'); flags.push('stale'); }
 
+  // מדידה חיה מול תחזית.
+  //
+  // המדידה **אינה מחליפה** את פסק הדין, ובכוונה: היא נקודה אחת, לפני
+  // דקות, ממרחק קילומטרים — ולא בהכרח מה שקורה על החוף עצמו. אבל כשהיא
+  // חלוקה על המודל בפער ממשי, מה שיש לנו הוא לא "תשובה אחרת" אלא
+  // *חוסר ידיעה*, וחוסר ידיעה מוריד דרגה ואינו מייצר ירוק.
+  let measured = null;
+  if (day === 0 && obs && obs.speedKt != null && obs.forecastAtObsKt != null) {
+    const deltaKt = Math.round((obs.speedKt - obs.forecastAtObsKt) * 10) / 10;
+    measured = { speedKt: obs.speedKt, gustKt: obs.gustKt ?? null, dirDeg: obs.dirDeg ?? null,
+                 ageMin: obs.ageMin ?? null, deltaKt,
+                 // הערך שאליו הושווה — התחזית *לשעת המדידה*, ולא המספר
+                 // הגדול בכרטיס שהוא חלון היום הטוב ביותר. בלי השדה הזה
+                 // הכרטיס מציג הפרש מול מספר שלא הושתתף בחישוב.
+                 forecastAtObsKt: Math.round(obs.forecastAtObsKt * 10) / 10,
+                 source: obs.source || null,
+                 stationName_he: obs.stationName_he || null, distanceKm: obs.distanceKm ?? null };
+    if (Math.abs(deltaKt) >= OBS_DISAGREE_KT) {
+      level = cap(level, 'yellow');
+      flags.push('obs_disagrees');
+    }
+  }
+
   if (spot.skill_floor === 'advanced' && level === 'green') flags.push('skill_advanced');
 
   const v = {
@@ -130,6 +157,7 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
     dirNote: dir.note,
     components: { speed, direction: dir.score, gust: gust.score, water: null },
     gustRatio: gust.ratio,
+    measured,
     flags: [...new Set(flags)],
     confidence: {
       level: spreadKt == null ? 'med' : spreadKt <= 3 ? 'high' : spreadKt <= 6 ? 'med' : 'low',
@@ -148,6 +176,7 @@ function unknownVerdict(spot, base, reasonCode) {
     window: { meanKt: null, gustKt: null, dirDeg: null, hoursRideable: 0 },
     gate: null, dirCls: null, dirNote: null,
     components: { speed: null, direction: null, gust: null, water: null },
+    measured: null,
     flags: [], reasonCode,
     confidence: { level: 'low', modelSpreadKt: null, runDeltaKt: null },
   };

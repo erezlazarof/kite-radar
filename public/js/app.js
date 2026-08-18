@@ -5,6 +5,7 @@
 import { FEATURES, REFRESH_MS, ATTRIBUTION, IMS_ATTRIBUTION, DISCLAIMER } from './config.js';
 import { state, savePrefs, ageMin, withFallback } from './store.js';
 import { fetchAllSpots } from './sources/openmeteo.js';
+import { fetchObs, obsForSpot, compareToForecast, obsAgeMin } from './sources/obs.js';
 import { scoreSpot } from './verdict/engine.js';
 import { israelDateParts } from './verdict/calendar.js';
 import { renderCard, renderDetail, LEVEL_META, REGION_HE, esc } from './ui/card.js';
@@ -33,10 +34,15 @@ async function boot() {
 
   renderFooter();
   await refreshForecast();
+  refreshObs();
 
   setInterval(() => { if (!document.hidden) refreshForecast(); }, REFRESH_MS.forecast);
+  setInterval(() => { if (!document.hidden) refreshObs(); }, REFRESH_MS.obs);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && ageMin(state.forecast?.fetchedAt) > 15) refreshForecast();
+    if (document.hidden) return;
+    // מה שבאמת חשוב בטלפון שהיה בכיס: לרענן לפי גיל, לא לפי טיימר
+    if (ageMin(state.forecast?.fetchedAt) > 15) refreshForecast();
+    if (ageMin(state.obs?.fetchedAt) > 5) refreshObs();
   });
 }
 
@@ -47,6 +53,17 @@ async function refreshForecast() {
   const r = await withFallback('forecast', 'forecast', () => fetchAllSpots(state.spots));
   state.forecast = r;
   setBusy(false);
+  render();
+}
+
+/**
+ * המדידה החיה. נמשכת בנפרד מהתחזית ובקצב אחר, כי מקורה אחר וקצב
+ * העדכון שלה אחר — ותקלה בה לא צריכה למחוק את התחזית מהמסך.
+ */
+async function refreshObs() {
+  if (!FEATURES.ims_live) return;
+  const r = await withFallback('obs', 'obs', () => fetchObs());
+  state.obs = r;
   render();
 }
 
@@ -72,12 +89,26 @@ function render() {
   const il = israelDateParts(now);
   const nowHour = state.day === 0 ? il.hour + il.minute / 60 : null;
 
+  const obsPayload = state.obs?.payload || null;
+
   const scored = state.spots.map(spot => {
     const f = fc.payload[spot.id];
     const forecast = f ? { ...f, ageMin: age } : null;
+
+    // המדידה נשלחת למנוע רק עם ההשוואה לשעה שבה היא נמדדה. בלי זה
+    // היינו משווים מדידה של 15:00 לתחזית של 17:00 וקוראים לזה אי-דיוק.
+    let obs = null;
+    if (state.day === 0 && obsPayload) {
+      const o = obsForSpot(spot, obsPayload);
+      if (o) {
+        const cmp = compareToForecast(o, f?.hours || [], now);
+        obs = { ...o, ageMin: obsAgeMin(o, now), forecastAtObsKt: cmp?.forecastKt ?? null };
+      }
+    }
+
     return {
       spot,
-      v: scoreSpot(spot, forecast, null, now, state.prefs, state.day),
+      v: scoreSpot(spot, forecast, obs, now, state.prefs, state.day),
       grid: f?.grid,
       hours: (f?.hours || []).filter(h => h.dayIndex === state.day),
       nowHour,
@@ -175,8 +206,13 @@ function updateStatus(scored) {
   if (fc.restored) txt = `אין חיבור — מוצג נתון שמור מלפני ${a} דק׳`;
   if (scored) txt = `${good ? `${good} ספוטים עם רוח · ` : ''}${txt}`;
 
+  // ניטור הפסקות בהזנה — התחייבות חוזית ברישיון השמ"ט, ולא קישוט.
+  const feed = state.obs?.payload?.feed || {};
+  const down = Object.entries(feed).filter(([, f]) => f && f.ok === false).map(([k]) => k);
+  if (down.length) txt = `מדידה חיה לא זמינה · ${txt}`;
+
   el.textContent = txt;
-  el.className = 'status' + (fc.restored ? ' status-warn' : '');
+  el.className = 'status' + (fc.restored || down.length ? ' status-warn' : '');
 }
 
 /**

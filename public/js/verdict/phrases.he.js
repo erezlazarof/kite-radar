@@ -32,6 +32,7 @@ export const FLAG_HE = {
   upwind_skill:    { icon: '↑',  short: 'אפ-ווינד חובה', text: 'חובה יכולת חתירה נגד הרוח. בלעדיה לא נכנסים למים כאן.', severity: 'critical' },
   gusty:           { icon: '⚠', short: 'משבים', text: 'הרוח לא יציבה — פערי משב גדולים.', severity: 'critical' },
   model_spread:    { icon: '≈', short: 'מודלים חלוקים', text: 'מודלי התחזית חלוקים ביניהם.', severity: 'critical' },
+  obs_disagrees:   { icon: '◆', short: 'מדידה חלוקה', text: 'התחנה מודדת משהו אחר ממה שהמודל חזה. כשאלה לא מסכימים, מה שיש לנו הוא חוסר ידיעה ולא תשובה אחרת.', severity: 'critical' },
   stale:           { icon: '⏱', short: 'נתון ישן', text: 'הנתון לא טרי.', severity: 'critical' },
   unverified_spot: { icon: '◎', short: 'לא אומת', text: 'לא נמצאה עדות שגולשים כאן בפועל. הגיאומטריה של החוף נגזרה ממפה ולא אומתה — ולכן אין דירוג ירוק.', severity: 'critical' },
   skill_advanced:  { icon: '⚑', short: 'למתקדמים', text: 'ספוט למתקדמים בלבד.', severity: 'skip' },
@@ -126,6 +127,19 @@ export function buildCaveats(v, spot) {
 
   if (v.freshness?.stale) {
     out.push(`התחזית התקבלה לפני ${n(v.freshness.ageMin)} דקות.`);
+  }
+  if (v.measured) {
+    const m = v.measured;
+    const sign = m.deltaKt > 0 ? 'יותר' : 'פחות';
+    out.push(
+      `${m.stationName_he || 'התחנה'} מודדת ${n(m.speedKt)} קשר` +
+      (m.gustKt != null ? `, משב ${n(m.gustKt)}` : '') +
+      (m.ageMin != null ? ` (לפני ${n(m.ageMin)} דקות` : '') +
+      (m.distanceKm != null ? `, ${n(m.distanceKm)} ק״מ מהחוף)` : m.ageMin != null ? ')' : '') +
+      (Math.abs(m.deltaKt) >= 2
+        ? ` — ${n(Math.abs(m.deltaKt))} קשר ${sign} מהתחזית.`
+        : ' — תואם לתחזית.')
+    );
   }
   if (v.confidence?.modelSpreadKt != null && v.confidence.modelSpreadKt > 8) {
     out.push(`המודלים חלוקים ב-${n(v.confidence.modelSpreadKt)} קשר. לבדוק שוב קרוב יותר למועד.`);

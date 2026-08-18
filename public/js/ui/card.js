@@ -47,6 +47,25 @@ export function heText(str) {
   return out + esc(src.slice(last));
 }
 
+/**
+ * ההפרש בין מדוד לחזוי. מתחת לשני קשר זה רעש מדידה ולא אי-הסכמה,
+ * ולכן הוא נאמר כ"תואם" ולא כמספר — מספר קטן מזמין פרשנות שאין לה כיסוי.
+ */
+function deltaCls(d) {
+  if (Math.abs(d) < 2) return 'same';
+  return d > 0 ? 'up' : 'down';
+}
+
+/**
+ * המשפט שנקרא פעם אחת. "מול 12 חזוי −4" הוא נכון ודורש פענוח;
+ * הפער נגזר משני המספרים ולכן אין צורך להציג גם אותו.
+ */
+function vsText(m) {
+  const f = `<span class="num" dir="ltr">${Math.round(m.forecastAtObsKt)}</span>`;
+  if (Math.abs(m.deltaKt) < 2) return `התחזית אמרה ${f} — תואם`;
+  return `התחזית אמרה ${f}`;
+}
+
 /** חץ כיוון. הקונבנציה: החץ מצביע לאן הרוח *הולכת*, כלומר dirFrom + 180. */
 function arrow(dirDeg) {
   if (dirDeg == null) return '';
@@ -114,6 +133,17 @@ export function renderCard(spot, v, extra = {}) {
       </span>
     </div>` : ''}
   </div>
+
+  ${v.measured ? `
+  <div class="measured">
+    <span class="m-dot" aria-hidden="true"></span>
+    <span class="m-label">נמדד עכשיו</span>
+    <span class="m-kt num">${n(v.measured.speedKt)}</span>
+    <span class="m-unit">קשר</span>
+    ${v.measured.gustKt != null ? `<span class="m-gust num">משב ${n(v.measured.gustKt)}</span>` : ''}
+    <span class="m-vs ${deltaCls(v.measured.deltaKt)}">${vsText(v.measured)}</span>
+    ${v.measured.ageMin != null ? `<span class="m-age num">לפני ${n(v.measured.ageMin)} דק׳</span>` : ''}
+  </div>` : ''}
 
   ${hasWind && extra.hours?.length ? `
   <div class="spark-wrap">

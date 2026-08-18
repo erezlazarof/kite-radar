@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "updated": "2026-08-18",
   "defaults": {
     "daytime_window": {
@@ -51,11 +51,14 @@
         "note_he": null
       },
       "live_stations": {
-        "ims": "ELON",
-        "isramar": null,
+        "ims": "ROSH HANIQRA",
+        "ims_num": 106,
+        "ims_lat": 33.081,
+        "ims_lon": 35.107,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 9.5,
-        "representative": false
+        "distance_km": 0.9,
+        "representative": true
       },
       "models": {
         "force": [],
@@ -74,80 +77,6 @@
         "https://www.surf-forecast.com/countries/Israel/breaks"
       ],
       "_verify": []
-    },
-    {
-      "id": "achziv",
-      "name_he": "חוף אכזיב",
-      "name_en": "Achziv Beach",
-      "region": "north",
-      "lat": 33.0486,
-      "lon": 35.1017,
-      "shore_normal_deg": 277,
-      "shore_normal_basis": "Local coastline Nahariya->Achziv bearing ~013 deg; seaward normal ~277. Map-derived, no source describes the orientation explicitly.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "צפוניות ומערביות",
-      "bad_dirs_he": "מזרחית — אופשור; החוף נמצא בתוך גן לאומי עם לגונות ושוניות",
-      "daytime_window": null,
-      "legal": [
-        {
-          "type": "reserve",
-          "months": null,
-          "weekdays": null,
-          "zone_he": "גן לאומי אכזיב / שמורת טבע אכזיב",
-          "note_he": "החוף בתוך גן לאומי בניהול רשות הטבע והגנים — כניסה למים בגנים לאומיים כפופה לתקנות ולהנחיות המקום; יש לוודא מול הגן לפני הנפה",
-          "source_url": "https://www.parks.org.il/new/maim/",
-          "verified": false
-        }
-      ],
-      "hazards": [
-        {
-          "code": "reef",
-          "severity": "high",
-          "note_he": "לגונות ושוניות כורכר רדודות לאורך החוף"
-        },
-        {
-          "code": "swimmers",
-          "severity": "med",
-          "note_he": "חוף רחצה מוכרז בגן הלאומי בעונה"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 33.048,
-        "lon": 35.065,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "ROSH HANIQRA",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 6.5,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "מופיע ברשימות ספוטים כלליות (windy.app) אבל אינו מתועד כספוט קייט פעיל באתרי הקהילה הישראלית — סביר כיציאה בצפוניות חזקות בלבד.",
-      "sources": [
-        "https://windy.app/spots/Israel",
-        "https://www.parks.org.il/new/maim/"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
     },
     {
       "id": "nahariya",
@@ -197,9 +126,12 @@
       },
       "live_stations": {
         "ims": "SHAVE ZIYYON",
-        "isramar": null,
+        "ims_num": 343,
+        "ims_lat": 32.98,
+        "ims_lon": 35.09,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 2.5,
+        "distance_km": 3.1,
         "representative": false
       },
       "models": {
@@ -256,9 +188,12 @@
       },
       "live_stations": {
         "ims": "SHAVE ZIYYON",
-        "isramar": null,
+        "ims_num": 343,
+        "ims_lat": 32.98,
+        "ims_lon": 35.09,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 0.9,
+        "distance_km": 0.5,
         "representative": true
       },
       "models": {
@@ -273,71 +208,6 @@
       "geo_confidence": "low",
       "notes_he": "מתועד כברייק גלישה; שימוש קייט מקומי ודליל — פחות מתועד מבצת ומהקריות.",
       "sources": [
-        "https://www.surf-forecast.com/countries/Israel/breaks"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "acre",
-      "name_he": "עכו — חוף ארגמן / המפעלים",
-      "name_en": "Acre (Argaman / Mifalim Beach)",
-      "region": "north",
-      "lat": 32.92,
-      "lon": 35.0736,
-      "shore_normal_deg": 235,
-      "shore_normal_basis": "Akko sits at the NORTHERN tip of Haifa Bay; the shoreline south of the old city curves so the beach looks SW into the bay rather than west. LOW certainty — derived from map geometry only, and the exact launch strip is not documented.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "מערבית ודרומית-מערבית (אונשור לתוך המפרץ); צפונית-מערבית עובדת בקצה הצפוני",
-      "bad_dirs_he": "מזרחית וצפונית-מזרחית — אופשור החוצה מהמפרץ",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "pollution",
-          "severity": "med",
-          "note_he": "קרבה לאזור התעשייה של מפרץ חיפה — איכות מים משתנה"
-        },
-        {
-          "code": "rocks",
-          "severity": "med",
-          "note_he": "שרידי חומות ומבנים בקו המים באזור העיר העתיקה"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.92,
-        "lon": 35.034,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "SHAVE ZIYYON",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 6.8,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "מקורות מזכירים את אזור עכו-חיפה-קריות כמקשה אחת ללימוד קייט; החוף שמדרום לעכו פחות מתועד כנקודת הנפה עצמאית.",
-      "sources": [
-        "https://kitesurfer.co.il/course-in-the-north/",
-        "https://kitejungle.com/kite-places/israel",
         "https://www.surf-forecast.com/countries/Israel/breaks"
       ],
       "_verify": [
@@ -394,9 +264,12 @@
       },
       "live_stations": {
         "ims": "AFEQ",
-        "isramar": null,
+        "ims_num": 78,
+        "ims_lat": 32.848,
+        "ims_lon": 35.112,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 4.4,
+        "distance_km": 4.6,
         "representative": false
       },
       "models": {
@@ -464,10 +337,13 @@
         "note_he": null
       },
       "live_stations": {
-        "ims": "HAIFA UNIVERSITY",
-        "isramar": null,
+        "ims": "HAIFA TECHNION",
+        "ims_num": 43,
+        "ims_lat": 32.766,
+        "ims_lon": 35.016,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 6,
+        "distance_km": 8,
         "representative": false
       },
       "models": {
@@ -530,9 +406,12 @@
       },
       "live_stations": {
         "ims": "AFEQ",
-        "isramar": null,
+        "ims_num": 78,
+        "ims_lat": 32.848,
+        "ims_lon": 35.112,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 6.2,
+        "distance_km": 6.3,
         "representative": false
       },
       "models": {
@@ -594,10 +473,13 @@
         "note_he": null
       },
       "live_stations": {
-        "ims": "HAIFA UNIVERSITY",
-        "isramar": null,
+        "ims": "HAIFA TECHNION",
+        "ims_num": 43,
+        "ims_lat": 32.766,
+        "ims_lon": 35.016,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 8.8,
+        "distance_km": 8.1,
         "representative": false
       },
       "models": {
@@ -617,124 +499,6 @@
         "https://kitejungle.com/kite-places/israel"
       ],
       "_verify": []
-    },
-    {
-      "id": "haifa-south-beach",
-      "name_he": "חוף דרומי — חיפה",
-      "name_en": "South Beach (Haifa)",
-      "region": "north",
-      "lat": 32.7969,
-      "lon": 34.9506,
-      "shore_normal_deg": 268,
-      "shore_normal_basis": "Same N-S Carmel coast segment as Dado (bearing ~358 deg); seaward normal ~268. Map-derived; the exact launch point on this strip is not documented.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "מערבית, צפונית-מערבית ודרומית-מערבית",
-      "bad_dirs_he": "מזרחית — אופשור",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "rocks",
-          "severity": "med",
-          "note_he": "כתמי סלע לאורך הרצועה הדרומית של חיפה"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.7969,
-        "lon": 34.911,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "HAIFA UNIVERSITY",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 7.7,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "מופיע באטלסי הקייט הבינלאומיים כ-South Beach Haifa; לא ברור אם זו רצועה נפרדת או חלק מאותו קטע של חוף דדו — לאמת בשטח.",
-      "sources": [
-        "https://kitejungle.com/kite-places/israel",
-        "https://se.kiteforum.com/kitesurf/country/Israel",
-        "https://www.unplug-kitesurf.com/destinations/israel"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "tirat-carmel-gilad",
-      "name_he": "חוף גלעד — טירת כרמל",
-      "name_en": "Gilad Beach (Tirat Carmel)",
-      "region": "north",
-      "lat": 32.7622,
-      "lon": 34.955,
-      "shore_normal_deg": 268,
-      "shore_normal_basis": "Southern end of the N-S Carmel coast segment (bearing ~358 deg); seaward normal ~268. Map-derived.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "מערבית וצפונית-מערבית; דרומית-מערבית בחורף",
-      "bad_dirs_he": "מזרחית — אופשור מרכס הכרמל",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "rocks",
-          "severity": "med",
-          "note_he": "כתמי כורכר בקו המים"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.7622,
-        "lon": 34.915,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "HAIFA UNIVERSITY",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 6.1,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "מופיע רק באטלס kitejungle כספוט קייט — לא מאושש באתרי הקהילה הישראלית; ככל הנראה יציאה מקומית ולא ספוט מרכזי.",
-      "sources": [
-        "https://kitejungle.com/kite-places/israel"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
     },
     {
       "id": "atlit",
@@ -774,9 +538,12 @@
       },
       "live_stations": {
         "ims": "EN KARMEL",
-        "isramar": null,
+        "ims_num": 44,
+        "ims_lat": 32.682,
+        "ims_lon": 34.96,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 4.5,
+        "distance_km": 3.4,
         "representative": false
       },
       "models": {
@@ -835,7 +602,10 @@
       },
       "live_stations": {
         "ims": "EN KARMEL",
-        "isramar": null,
+        "ims_num": 44,
+        "ims_lat": 32.682,
+        "ims_lon": 34.96,
+        "isramar": "hadera",
         "meteotech": null,
         "distance_km": 2.9,
         "representative": true
@@ -857,81 +627,6 @@
         "https://kitejungle.com/kite-places/israel"
       ],
       "_verify": []
-    },
-    {
-      "id": "habonim-dor",
-      "name_he": "חוף הבונים / דור — טנטורה",
-      "name_en": "Habonim / Dor (Tantura)",
-      "region": "north",
-      "lat": 32.6108,
-      "lon": 34.9164,
-      "shore_normal_deg": 265,
-      "shore_normal_basis": "The regional coastline runs ~009 deg (normal ~279), but Dor/Tantura is a sheltered bay behind the Dor islands and the local beach arc faces WSW; ~265 is the bay's own normal. Map-derived, medium certainty.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "מערבית ודרומית-מערבית לתוך המפרץ; צפונית מוצללת חלקית ע\"י האיים",
-      "bad_dirs_he": "מזרחית — אופשור; צפונית-מזרחית מסוכנת",
-      "daytime_window": null,
-      "legal": [
-        {
-          "type": "reserve",
-          "months": null,
-          "weekdays": null,
-          "zone_he": "שמורת טבע חוף דור–הבונים ושמורת איי דור–מעגן מיכאל",
-          "note_he": "רצועת החוף בשמורת טבע מוכרזת; האיים עצמם שמורה סגורה עם עונת קינון — אין להתקרב לאיים ואין לנחות עליהם",
-          "source_url": "https://www.parks.org.il/reserve-park/dor-michael/",
-          "verified": false
-        }
-      ],
-      "hazards": [
-        {
-          "code": "reef",
-          "severity": "high",
-          "note_he": "איי דור ושוניות כורכר במרחק קצר מהחוף"
-        },
-        {
-          "code": "shallow",
-          "severity": "med",
-          "note_he": "מפרץ רדוד עם קרקעית משתנה"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.635,
-        "lon": 34.882,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "EN KARMEL",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 5,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "אזור נחשולים/טנטורה מפעיל מועדון ספורט ימי (סאפ, קיאקים, גלישת רוח); פעילות הקייט עצמה מתועדת פחות משכנתה מעיין צבי.",
-      "sources": [
-        "https://www.parks.org.il/reserve-park/dor-michael/",
-        "https://www.nahsholim.co.il/activities",
-        "https://gosurf.co.il/"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
     },
     {
       "id": "maayan-tzvi",
@@ -971,9 +666,12 @@
       },
       "live_stations": {
         "ims": "HADERA PORT",
-        "isramar": null,
+        "ims_num": 46,
+        "ims_lat": 32.474,
+        "ims_lon": 34.883,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 11.1,
+        "distance_km": 10.6,
         "representative": false
       },
       "models": {
@@ -1041,9 +739,12 @@
       },
       "live_stations": {
         "ims": "HADERA PORT",
-        "isramar": null,
+        "ims_num": 46,
+        "ims_lat": 32.474,
+        "ims_lon": 34.883,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 2.7,
+        "distance_km": 2.2,
         "representative": true
       },
       "models": {
@@ -1112,10 +813,13 @@
       },
       "live_stations": {
         "ims": "HADERA PORT",
+        "ims_num": 46,
+        "ims_lat": 32.474,
+        "ims_lon": 34.883,
         "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 3,
-        "representative": false
+        "distance_km": 1.6,
+        "representative": true
       },
       "models": {
         "force": [],
@@ -1132,71 +836,6 @@
         "https://gosurf.co.il/",
         "https://haipo.co.il/item/606030",
         "https://www.kdi.org.il/en/info/surfmapisrael"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "michmoret",
-      "name_he": "מכמורת",
-      "name_en": "Michmoret",
-      "region": "center",
-      "lat": 32.4036,
-      "lon": 34.8656,
-      "shore_normal_deg": 275,
-      "shore_normal_basis": "Regional coastline ~008 deg (normal ~278), adjusted west for the Michmoret headland/marina that juts out and shelters the beach to its south. Map-derived.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "צפוניות ומערביות; דרומית-מערבית בחורף",
-      "bad_dirs_he": "מזרחית — אופשור",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "rocks",
-          "severity": "med",
-          "note_he": "רכס כורכר ומבנה המזח בקצה הצפוני"
-        },
-        {
-          "code": "swimmers",
-          "severity": "med",
-          "note_he": "חוף רחצה מוכרז ובית ספר ימי פעילים"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.4036,
-        "lon": 34.826,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "HADERA PORT",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 7.5,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "מופיע ברשימות תחזית ובאטלס windy.app, וממוקם בין בית ינאי לחדרה — אבל לא אותר תיעוד קהילתי לגלישת קייט בו עצמו; ככל הנראה חלופה מקומית לבית ינאי.",
-      "sources": [
-        "https://windy.app/spots/Israel",
-        "https://gosurf.co.il/",
-        "https://www.unplug-kitesurf.com/destinations/israel"
       ],
       "_verify": [
         "shore_normal_deg",
@@ -1257,9 +896,12 @@
       },
       "live_stations": {
         "ims": "HADERA PORT",
-        "isramar": null,
+        "ims_num": 46,
+        "ims_lat": 32.474,
+        "ims_lon": 34.883,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 9.4,
+        "distance_km": 9.9,
         "representative": false
       },
       "models": {
@@ -1277,352 +919,6 @@
         "https://kitesurfer.co.il/kitesurfing-in-israel/",
         "https://kitesurfing.co.il/spots/",
         "https://www.iksurfmag.com/travel-guides/asia/israel/tel-aviv/"
-      ],
-      "_verify": []
-    },
-    {
-      "id": "netanya-kontiki",
-      "name_he": "קונטיקי — נתניה",
-      "name_en": "Kontiki (Netanya)",
-      "region": "center",
-      "lat": 32.3286,
-      "lon": 34.8481,
-      "shore_normal_deg": 280,
-      "shore_normal_basis": "Sharon coast Poleg->Beit Yanai bearing ~011 deg; seaward normal ~279. Cross-check: source says SOUTH wind is the working direction here, i.e. side-shore along a WNW-facing beach under a cliff.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": "חורף — עונת הדרומיות",
-      "good_dirs_he": "דרומיות — זה הכיוון של הספוט הזה",
-      "bad_dirs_he": "מזרחית — אופשור מהמצוק; צפונית מוצללת ע\"י מבנה החוף",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "breakwater",
-          "severity": "high",
-          "note_he": "שוברי גלים בקו המים"
-        },
-        {
-          "code": "cliff",
-          "severity": "high",
-          "note_he": "מצוק ישירות מאחורי החוף — טורבולנציה והיעדר מרחב הנפה"
-        },
-        {
-          "code": "narrow_beach",
-          "severity": "high",
-          "note_he": "חוף צר מאוד"
-        },
-        {
-          "code": "crowded",
-          "severity": "med",
-          "note_he": "עמוס בסופי שבוע ובקיץ — מרכז העיר נתניה"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.3286,
-        "lon": 34.808,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "HADERA PORT",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 16,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "advanced",
-      "source": "core",
-      "status": "established",
-      "geo_confidence": "high",
-      "notes_he": "למנוסים בלבד; רוב הגולשים מעדיפים לרדת דרומה לפולג באותו יום רוח.",
-      "sources": [
-        "https://kitesurfer.co.il/kitesurfing-in-israel/",
-        "https://kitesurfing.co.il/spots/"
-      ],
-      "_verify": []
-    },
-    {
-      "id": "poleg",
-      "name_he": "חוף פולג — נתניה",
-      "name_en": "Poleg Beach (Netanya)",
-      "region": "center",
-      "lat": 32.2872,
-      "lon": 34.8397,
-      "shore_normal_deg": 278,
-      "shore_normal_basis": "Coast Poleg->Beit Yanai bearing ~011 deg; seaward normal ~279. Cross-check: the source calls Poleg primarily a north-wind spot — side-onshore against a WNW normal.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": "עונת הצפוניות — אביב וסתיו",
-      "good_dirs_he": "צפוניות בעיקר; מערבית עובדת",
-      "bad_dirs_he": "מזרחית — אופשור",
-      "daytime_window": null,
-      "legal": [
-        {
-          "type": "reserve",
-          "months": null,
-          "weekdays": null,
-          "zone_he": "שמורת טבע נחל פולג",
-          "note_he": "החוף בסמוך לשמורת טבע — יש לכבד את סימוני השמורה ולא להנפיף בתוך הדיונה המוגנת",
-          "source_url": "https://kitesurfer.co.il/kitesurfing-in-israel/",
-          "verified": false
-        }
-      ],
-      "hazards": [
-        {
-          "code": "crowded",
-          "severity": "high",
-          "note_he": "עמוס מאוד בימי צפונית טובה — אבל יש מספיק מקום להתפרס"
-        },
-        {
-          "code": "rocks",
-          "severity": "med",
-          "note_he": "כתמי כורכר בקו המים"
-        },
-        {
-          "code": "swimmers",
-          "severity": "med",
-          "note_he": "מתרחצים באזור המסומן"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.269,
-        "lon": 34.801,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "HADERA PORT",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 23,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "beginner",
-      "source": "core",
-      "status": "established",
-      "geo_confidence": "high",
-      "notes_he": "חוף רחב וארוך במיוחד עם חניה גדולה מצומת פולג — אחד משני מרכזי הקורסים הגדולים במרכז (IKS, Windrose).",
-      "sources": [
-        "https://kitesurfer.co.il/kitesurfing-in-israel/",
-        "https://kitesurfing.co.il/spots/",
-        "https://www.windrose.co.il/en/"
-      ],
-      "_verify": []
-    },
-    {
-      "id": "gaash",
-      "name_he": "געש / שפיים",
-      "name_en": "Ga'ash / Shefayim",
-      "region": "center",
-      "lat": 32.2317,
-      "lon": 34.8125,
-      "shore_normal_deg": 285,
-      "shore_normal_basis": "Coast Ga'ash->Poleg bearing ~022 deg (this segment is more angled than the rest of the Sharon); seaward normal ~292, moderated to 285. Map-derived only.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "צפוניות ומערביות (בהיקש מהחופים השכנים — לא מתועד ישירות)",
-      "bad_dirs_he": "מזרחית — אופשור מהמצוק",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "cliff",
-          "severity": "med",
-          "note_he": "מצוק מאחורי החוף — טורבולנציה ברוח מזרחית"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.2317,
-        "lon": 34.773,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "TEL AVIV COAST",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 19.7,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "לא נמצא שום תיעוד של גלישת קייט בגעש/שפיים באף מקור — זהו חוף גלים ובריכה, לא ספוט קייט. נכלל ברמת ודאות נמוכה כדי לא להשמיט, ולא כי אושש.",
-      "sources": [
-        "https://gosurf.co.il/"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "herzliya-zvulun",
-      "name_he": "חוף זבולון — הרצליה פיתוח (\"9 Beach\")",
-      "name_en": "Zvulun Beach / 9 Beach (Herzliya Pituah)",
-      "region": "center",
-      "lat": 32.1739,
-      "lon": 34.7961,
-      "shore_normal_deg": 280,
-      "shore_normal_basis": "Same Herzliya Pituah segment (coastline ~012 deg); seaward normal ~278. Map-derived.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": "חורף בעיקר",
-      "good_dirs_he": "דרומיות ומערביות — בעיקר בחורף; צפונית עובדת חלש יותר",
-      "bad_dirs_he": "מזרחית — אופשור",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "swimmers",
-          "severity": "med",
-          "note_he": "חוף רחצה עירוני עם בר חוף פעיל"
-        },
-        {
-          "code": "crowded",
-          "severity": "med",
-          "note_he": "עמוס בסופי שבוע"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.1739,
-        "lon": 34.756,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "TEL AVIV COAST",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 13.1,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "beginner",
-      "source": "core",
-      "status": "established",
-      "geo_confidence": "medium",
-      "notes_he": "מופיע באטלסי הקייט הבינלאומיים כ-\"9 Beach\" על שם בר ניין ביץ' שיושב על חוף זבולון בהרצליה פיתוח — לא לבלבל עם חוף זבולון של קריית ים בצפון.",
-      "sources": [
-        "https://se.kiteforum.com/kitesurf/country/Israel",
-        "https://www.unplug-kitesurf.com/destinations/israel",
-        "https://www.timeout.com/israel/bars/nine-beach"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "herzliya",
-      "name_he": "חוף המעליות / השרון — הרצליה",
-      "name_en": "Herzliya (Elevators / HaSharon Beach)",
-      "region": "center",
-      "lat": 32.165,
-      "lon": 34.7969,
-      "shore_normal_deg": 280,
-      "shore_normal_basis": "Coast Herzliya->Ga'ash bearing ~012 deg; seaward normal ~278. Cross-check: source says S/SW is the winter working direction — side-onshore against a WNW normal, under the cliff.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": "חורף",
-      "good_dirs_he": "דרומיות ודרומיות-מערביות — בעיקר בחורף",
-      "bad_dirs_he": "מזרחית — אופשור מהמצוק, עם טורבולנציה כבדה מעל המלונות",
-      "daytime_window": null,
-      "legal": [
-        {
-          "type": "ban",
-          "months": null,
-          "weekdays": null,
-          "zone_he": "חוף הכוכבים צפון (חוף הגולשים המוכרז)",
-          "note_he": "הרצליה הכריזה על חוף הגולשים בחוף הכוכבים צפון — ובו גלישת קייט וספורט ימי ממונע אינם מותרים מטעמי בטיחות. הקייט מתקיים בחופים אחרים בעיר",
-          "source_url": "https://herzliya.mynet.co.il/local_news/article/s1z0jlgup",
-          "verified": false,
-          "short_he": "אסור לגלוש כאן"
-        }
-      ],
-      "hazards": [
-        {
-          "code": "narrow_beach",
-          "severity": "high",
-          "note_he": "חוף צר מתחת למלון דניאל"
-        },
-        {
-          "code": "breakwater",
-          "severity": "high",
-          "note_he": "שובר גלים בקו המים"
-        },
-        {
-          "code": "cliff",
-          "severity": "med",
-          "note_he": "מצוק ומבנים בקרבת קו החוף"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 32.163,
-        "lon": 34.761,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "TEL AVIV COAST",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 11,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "established",
-      "geo_confidence": "high",
-      "notes_he": "הכניסה מתחת למלון דניאל; מתאים למנוסים — יש מחסה מהגשם אבל אין מרחב הנפה.",
-      "sources": [
-        "https://kitesurfer.co.il/kitesurfing-in-israel/",
-        "https://kitesurfing.co.il/spots/",
-        "https://herzliya.mynet.co.il/local_news/article/s1z0jlgup"
       ],
       "_verify": []
     },
@@ -1679,9 +975,12 @@
       },
       "live_stations": {
         "ims": "TEL AVIV COAST",
-        "isramar": null,
+        "ims_num": 178,
+        "ims_lat": 32.059,
+        "ims_lon": 34.759,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 7.8,
+        "distance_km": 8,
         "representative": false
       },
       "models": {
@@ -1811,9 +1110,12 @@
       },
       "live_stations": {
         "ims": "TEL AVIV COAST",
+        "ims_num": 178,
+        "ims_lat": 32.059,
+        "ims_lon": 34.759,
         "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 2.3,
+        "distance_km": 0.9,
         "representative": true
       },
       "models": {
@@ -1872,10 +1174,13 @@
       },
       "live_stations": {
         "ims": "TEL AVIV COAST",
+        "ims_num": 178,
+        "ims_lat": 32.059,
+        "ims_lon": 34.759,
         "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 4.7,
-        "representative": true
+        "distance_km": 4.9,
+        "representative": false
       },
       "models": {
         "force": [],
@@ -1945,9 +1250,12 @@
       },
       "live_stations": {
         "ims": "TEL AVIV COAST",
-        "isramar": null,
+        "ims_num": 178,
+        "ims_lat": 32.059,
+        "ims_lon": 34.759,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 6.1,
+        "distance_km": 6,
         "representative": false
       },
       "models": {
@@ -1964,70 +1272,6 @@
       "sources": [
         "https://kitesurfing.co.il/spots/",
         "https://kitesurfer.co.il/kitesurfing-in-israel/"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "rishon-lezion",
-      "name_he": "חוף ראשון לציון",
-      "name_en": "Rishon LeZion Beach",
-      "region": "center",
-      "lat": 31.9769,
-      "lon": 34.7286,
-      "shore_normal_deg": 282,
-      "shore_normal_basis": "Coast Rishon->Bat Yam bearing ~011 deg; seaward normal ~279, rounded to 282. Map-derived.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "דרומיות ומערביות; צפונית עובדת",
-      "bad_dirs_he": "מזרחית — אופשור",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "swimmers",
-          "severity": "med",
-          "note_he": "חוף רחצה מוכרז עם קייטנות גלישה פעילות"
-        },
-        {
-          "code": "shorebreak",
-          "severity": "med",
-          "note_he": "שוברי גלים ורצועות רחצה מסומנות"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 31.9769,
-        "lon": 34.689,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "BET DAGAN",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 8.1,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "מופיע ברשימות תחזית וכמרכז קייטנות גלישת גלים; לא אותר תיעוד ייעודי לגלישת קייט — סביר כחוף מעבר בין בת ים לפלמחים.",
-      "sources": [
-        "https://gosurf.co.il/",
-        "https://www.ginosurfshop.co.il/"
       ],
       "_verify": [
         "shore_normal_deg",
@@ -2105,10 +1349,13 @@
         "note_he": null
       },
       "live_stations": {
-        "ims": "TEL AVIV COAST",
-        "isramar": null,
+        "ims": "ASHDOD PORT",
+        "ims_num": 124,
+        "ims_lat": 31.835,
+        "ims_lon": 34.638,
+        "isramar": "hadera",
         "meteotech": null,
-        "distance_km": 18,
+        "distance_km": 11.6,
         "representative": false
       },
       "models": {
@@ -2126,69 +1373,6 @@
         "https://kitejungle.com/kite-places/israel",
         "https://se.kiteforum.com/kitesurf/country/Israel",
         "https://www.parks.org.il/reserve-park/%D7%92%D7%9F-%D7%9C%D7%90%D7%95%D7%9E%D7%99-%D7%97%D7%95%D7%A3-%D7%A4%D7%9C%D7%9E%D7%97%D7%99%D7%9D/"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "ashdod-mei-ami",
-      "name_he": "חוף מי עמי — אשדוד",
-      "name_en": "Mei Ami Beach (Ashdod)",
-      "region": "south",
-      "lat": 31.8153,
-      "lon": 34.64,
-      "shore_normal_deg": 288,
-      "shore_normal_basis": "Same Ashdod segment as HaKshatot (coastline ~023 deg); seaward normal ~293, moderated to 288. Map-derived.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "צפוניות ומערביות",
-      "bad_dirs_he": "מזרחית — אופשור",
-      "daytime_window": null,
-      "legal": [],
-      "hazards": [
-        {
-          "code": "boat_traffic",
-          "severity": "med",
-          "note_he": "צפוני יותר מהקשתות — קרוב יותר לנמל"
-        },
-        {
-          "code": "swimmers",
-          "severity": "med",
-          "note_he": "חוף רחצה מוכרז"
-        }
-      ],
-      "marine": {
-        "available": true,
-        "provider": "best_match",
-        "lat": 31.8153,
-        "lon": 34.6,
-        "confidence": "verified",
-        "note_he": null
-      },
-      "live_stations": {
-        "ims": "ASHDOD PORT",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 1.6,
-        "representative": true
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "מופיע ברשימות התחזית כחוף נפרד אבל בפועל אותה רצועה של הקשתות; בדקתי גם את \"חוף לידו\" באשדוד — לא נמצא לו תיעוד כספוט קייט.",
-      "sources": [
-        "https://gosurf.co.il/"
       ],
       "_verify": [
         "shore_normal_deg",
@@ -2249,9 +1433,12 @@
       },
       "live_stations": {
         "ims": "ASHDOD PORT",
+        "ims_num": 124,
+        "ims_lat": 31.835,
+        "ims_lon": 34.638,
         "isramar": null,
         "meteotech": null,
-        "distance_km": 4,
+        "distance_km": 3.3,
         "representative": false
       },
       "models": {
@@ -2319,10 +1506,13 @@
         "note_he": null
       },
       "live_stations": {
-        "ims": "ASHQELON PORT",
+        "ims": "NIZZAN",
+        "ims_num": 274,
+        "ims_lat": 31.733,
+        "ims_lon": 34.635,
         "isramar": null,
         "meteotech": null,
-        "distance_km": 7.1,
+        "distance_km": 4.2,
         "representative": false
       },
       "models": {
@@ -2391,9 +1581,12 @@
       },
       "live_stations": {
         "ims": "ASHQELON PORT",
+        "ims_num": 208,
+        "ims_lat": 31.633,
+        "ims_lon": 34.516,
         "isramar": null,
         "meteotech": null,
-        "distance_km": 3.5,
+        "distance_km": 5.6,
         "representative": false
       },
       "models": {
@@ -2475,10 +1668,13 @@
       },
       "live_stations": {
         "ims": "ASHQELON PORT",
+        "ims_num": 208,
+        "ims_lat": 31.633,
+        "ims_lon": 34.516,
         "isramar": null,
         "meteotech": null,
-        "distance_km": 8.5,
-        "representative": false
+        "distance_km": 2.4,
+        "representative": true
       },
       "models": {
         "force": [],
@@ -2553,9 +1749,12 @@
       },
       "live_stations": {
         "ims": "BET ZAYDA",
+        "ims_num": 6,
+        "ims_lat": 32.881,
+        "ims_lon": 35.653,
         "isramar": null,
         "meteotech": null,
-        "distance_km": 4.9,
+        "distance_km": 3.4,
         "representative": false
       },
       "models": {
@@ -2646,10 +1845,13 @@
       },
       "live_stations": {
         "ims": "LEV KINERET",
+        "ims_num": 115,
+        "ims_lat": 32.816,
+        "ims_lon": 35.599,
         "isramar": null,
         "meteotech": null,
-        "distance_km": 5,
-        "representative": true
+        "distance_km": 4.7,
+        "representative": false
       },
       "models": {
         "force": [],
@@ -2675,140 +1877,6 @@
         "https://kitesurfing.co.il/spots/"
       ],
       "_verify": []
-    },
-    {
-      "id": "kinneret-ein-gev",
-      "name_he": "עין גב — כנרת",
-      "name_en": "Ein Gev, Sea of Galilee",
-      "region": "kinneret",
-      "lat": 32.7803,
-      "lon": 35.6403,
-      "shore_normal_deg": 272,
-      "shore_normal_basis": "EAST shore of the Kinneret — open water lies west, shore normal ~272. Same geometry as Diamond, a few km south.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": "קיץ — יוני עד ספטמבר",
-      "good_dirs_he": "מערביות ודרומיות-מערביות (התרמית הקיצית)",
-      "bad_dirs_he": "מזרחיות — אופשור מרמת הגולן",
-      "daytime_window": {
-        "start": 12,
-        "end": 18
-      },
-      "legal": [],
-      "hazards": [
-        {
-          "code": "boat_traffic",
-          "severity": "med",
-          "note_he": "מרכז ספורט ימי פעיל (סקי מים, וויקבורד) וסירות"
-        },
-        {
-          "code": "rocks",
-          "severity": "low",
-          "note_he": "חלקים מהחוף מסולעים"
-        }
-      ],
-      "marine": {
-        "available": false,
-        "provider": null,
-        "lat": null,
-        "lon": null,
-        "confidence": "none",
-        "note_he": "אין מודל גלים אמין לכנרת. מוצגת רוח בלבד."
-      },
-      "live_stations": {
-        "ims": "LEV KINERET",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 5.8,
-        "representative": false
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "לא נמצא תיעוד ישיר לגלישת קייט בעין גב — החוף מתועד כמרכז וויקבורד וסקי מים. נכלל ברמת ודאות נמוכה כחוף מזרחי סביר לתרמית הקיץ, לא כספוט מאושש.",
-      "sources": [
-        "https://www.wakeboard.co.il/ein-gev-water-sports/",
-        "https://www.eretz-kinneret.co.il/"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
-    },
-    {
-      "id": "kinneret-tzemach",
-      "name_he": "צמח — כנרת (דרום)",
-      "name_en": "Tzemach, Sea of Galilee (south shore)",
-      "region": "kinneret",
-      "lat": 32.7047,
-      "lon": 35.5847,
-      "shore_normal_deg": 350,
-      "shore_normal_basis": "SOUTH shore of the Kinneret — the open lake lies NORTH, so the shore normal is ~350, the opposite of the east-shore spots. Getting this backwards would flip every wind call at this spot.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": "קיץ",
-      "good_dirs_he": "צפוניות — האונשור היחיד בחוף דרומי",
-      "bad_dirs_he": "דרומיות — אופשור מלא לכיוון עמק הירדן; גם מערבית ומזרחית הן סייד-שור בלבד",
-      "daytime_window": {
-        "start": 12,
-        "end": 18
-      },
-      "legal": [],
-      "hazards": [
-        {
-          "code": "offshore_wind",
-          "severity": "high",
-          "note_he": "התרמית הקיצית בכנרת מגיעה בעיקר ממערב-דרום-מערב — בחוף דרומי זה סייד-אופשור ולא אונשור"
-        },
-        {
-          "code": "crowded",
-          "severity": "med",
-          "note_he": "חוף מוכרז עם מדשאות וקמפינג — עמוס בעונה"
-        }
-      ],
-      "marine": {
-        "available": false,
-        "provider": null,
-        "lat": null,
-        "lon": null,
-        "confidence": "none",
-        "note_he": "אין מודל גלים אמין לכנרת. מוצגת רוח בלבד."
-      },
-      "live_stations": {
-        "ims": "ZEMAH",
-        "isramar": null,
-        "meteotech": null,
-        "distance_km": 0.7,
-        "representative": true
-      },
-      "models": {
-        "force": [],
-        "exclude": [],
-        "reason_he": null
-      },
-      "sub_spots": [],
-      "skill_floor": "intermediate",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "לא נמצא תיעוד לגלישת קייט בצמח. נכלל ברמת ודאות נמוכה כי מדובר בחוף מוכרז ומרכזי בדרום האגם — אבל הכיוון של התרמית הקיצית הופך אותו לאופשור, ולכן סביר שדווקא לכן הוא לא בשימוש.",
-      "sources": [
-        "https://www.eretz-kinneret.co.il/",
-        "https://www.natureil.com/"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
-      ]
     },
     {
       "id": "eilat-north",
@@ -2874,7 +1942,7 @@
         "ims": null,
         "isramar": null,
         "meteotech": "eilat_iui",
-        "distance_km": 3,
+        "distance_km": null,
         "representative": true
       },
       "models": {
@@ -2984,7 +2052,7 @@
         "ims": null,
         "isramar": null,
         "meteotech": "eilat_iui",
-        "distance_km": 5.5,
+        "distance_km": null,
         "representative": true
       },
       "models": {
@@ -3010,84 +2078,6 @@
       ],
       "_verify": [
         "shore_normal_deg"
-      ]
-    },
-    {
-      "id": "eilat-almog",
-      "name_he": "שמורת חוף האלמוגים — אילת",
-      "name_en": "Coral Beach Nature Reserve (Eilat)",
-      "region": "eilat",
-      "lat": 29.5028,
-      "lon": 34.9192,
-      "shore_normal_deg": 115,
-      "shore_normal_basis": "West shore of the Gulf of Aqaba, same segment as the Kite Beach (coastline ~038/218 deg); seaward normal ~115, i.e. facing ESE.",
-      "direction_overrides": [],
-      "season": null,
-      "season_he": null,
-      "good_dirs_he": "צפוניות (זהה לריף רף) — אבל ראה ההגבלה החוקית",
-      "bad_dirs_he": "דרומיות",
-      "daytime_window": {
-        "start": 12,
-        "end": 18
-      },
-      "legal": [
-        {
-          "type": "reserve",
-          "months": null,
-          "weekdays": null,
-          "zone_he": "שמורת טבע חוף האלמוגים, כ-1200 מ' ברצועת החוף הדרומית",
-          "note_he": "אזור אסור לגלישת קייט — גולשים שיוצאים לתוך השמורה נקנסים ע\"י פקחי רשות הטבע והגנים. נכלל כאן ככלי לסימון אזור אסור בפלטפורמה, ולא כספוט",
-          "source_url": "https://eilat.city/%D7%A9%D7%9E%D7%95%D7%A8%D7%AA-%D7%98%D7%91%D7%A2-%D7%97%D7%95%D7%A3-%D7%90%D7%9C%D7%9E%D7%95%D7%92%D7%99%D7%9D",
-          "verified": false
-        }
-      ],
-      "hazards": [
-        {
-          "code": "reef",
-          "severity": "high",
-          "note_he": "שונית אלמוגים חיה ורדודה לכל אורך 1200 מ' — נפילה כאן פוצעת גם את הגולש וגם את השונית"
-        }
-      ],
-      "marine": {
-        "available": false,
-        "provider": null,
-        "lat": null,
-        "lon": null,
-        "confidence": "none",
-        "note_he": "אין נתוני גובה גל למפרץ אילת באף מודל שנבדק. לא מוצג — ולא מומצא."
-      },
-      "live_stations": {
-        "ims": "ASHQELON PORT",
-        "isramar": null,
-        "meteotech": "eilat_iui",
-        "distance_km": 244.5,
-        "representative": false
-      },
-      "models": {
-        "force": [
-          "gfs_seamless",
-          "ecmwf_ifs025"
-        ],
-        "exclude": [
-          "icon_seamless"
-        ],
-        "reason_he": "אילת יושבת על הקצה הדרומי של דומיין ICON-EU. המודל לא אמין כאן."
-      },
-      "sub_spots": [],
-      "skill_floor": "advanced",
-      "source": "core",
-      "status": "candidate",
-      "geo_confidence": "low",
-      "notes_he": "זהו אזור אסור, לא ספוט. windy.app מציג \"Coral Beach\" כנקודת תחזית — אין לפרש זאת כהיתר גלישה.",
-      "sources": [
-        "https://eilat.city/%D7%A9%D7%9E%D7%95%D7%A8%D7%AA-%D7%98%D7%91%D7%A2-%D7%97%D7%95%D7%A3-%D7%90%D7%9C%D7%9E%D7%95%D7%92%D7%99%D7%9D",
-        "https://kitesurfer.co.il/eilat/",
-        "https://windy.app/spots/Israel"
-      ],
-      "_verify": [
-        "shore_normal_deg",
-        "lat",
-        "lon"
       ]
     }
   ]
