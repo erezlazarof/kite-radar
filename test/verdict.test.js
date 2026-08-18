@@ -49,25 +49,43 @@ test('circularMean — 350 ו-10 נותנים 0, לא 180', () => {
 
 /* ===================== חריג אילת ===================== */
 
+/**
+ * חריג "אופשור מנוהל" — נבדק על פיקסצ'ר ולא על הרג'יסטר.
+ * העיקרון (override גובר על המיפוי הגנרי, ומקבל טיפול ויזואלי שלישי
+ * שאינו ירוק ואינו אדום) חייב להישאר מכוסה גם כשהנתונים משתנים —
+ * וחוף אילת הצפוני איבד את החריג שלו כשהתברר שהוא לא חוף הקייט.
+ */
+const MANAGED_FIXTURE = {
+  id: 'fixture-managed', name_he: 'פיקסצ׳ר', region: 'eilat',
+  lat: 29.55, lon: 34.95, shore_normal_deg: 180,
+  direction_overrides: [{ from: 320, to: 40, class: 'offshore_managed', score: 78,
+                          flags: ['rescue_boat', 'upwind_skill'], note_he: 'מצב הרכיבה הרגיל כאן.' }],
+  season: null, daytime_window: { start: 12, end: 18 }, legal: [], hazards: [],
+  marine: { available: false, confidence: 'none', note_he: 'אין גלים.' },
+  live_stations: {}, models: { force: [], exclude: [] }, sub_spots: [],
+  skill_floor: 'advanced', source: 'core', status: 'established', _verify: [],
+};
+
 test('אילת — צפונית מוחזרת כ-offshore_managed ולא כאדום', () => {
-  const s = spot('eilat-north');
+  const s = MANAGED_FIXTURE;
   const d = directionClass(0, s);
   assert.equal(d.cls, 'offshore_managed');
   assert.ok(d.overridden, 'חייב להגיע מ-direction_overrides');
   assert.ok(d.flags.includes('rescue_boat'));
   assert.ok(d.flags.includes('upwind_skill'));
-  assert.equal(offAxisDeg(0, s.shore_normal_deg), 180, 'ובכל זאת גאומטרית זו רוח החוצה');
+  assert.ok(offAxisDeg(0, s.shore_normal_deg) > 157,
+    'ובכל זאת גאומטרית זו רוח החוצה — החריג הוא החלטה, לא גאומטריה');
 });
 
 test('אילת — 18 קשר צפונית אינה אדומה, ונושאת את דגלי החילוץ', () => {
-  const v = scoreSpot(spot('eilat-north'), fc({ kt: 18, dir: 0 }), null, Date.UTC(2026, 7, 18, 9), {});
+  const v = scoreSpot(MANAGED_FIXTURE, fc({ kt: 18, dir: 0 }), null, Date.UTC(2026, 7, 18, 9), {});
   assert.notEqual(v.level, 'red');
   assert.ok(v.flags.includes('rescue_boat'));
   assert.ok(v.flags.includes('upwind_skill'));
 });
 
 test('אילת — רוח מזרחית (מחוץ לקשת החריג) כן חוזרת אדומה', () => {
-  const s = spot('eilat-north');
+  const s = MANAGED_FIXTURE;
   const d = directionClass(90, s);   // 90° מול ניצב 180° → offAxis 90 = צד-חוף
   assert.equal(d.overridden, false);
   const dS = directionClass(270, s); // 270 מול 180 → offAxis 90 גם כן
@@ -75,7 +93,7 @@ test('אילת — רוח מזרחית (מחוץ לקשת החריג) כן חו�
 });
 
 test('אילת — רוח דרומית ישר מהים אינה נופלת לחריג', () => {
-  const d = directionClass(180, spot('eilat-north'));
+  const d = directionClass(180, MANAGED_FIXTURE);
   assert.equal(d.cls, 'onshore');
   assert.equal(d.overridden, false);
 });
@@ -122,7 +140,7 @@ test('העדר נתונים מחזיר unknown, לא אדום', () => {
 /* ===================== חוקיות ועונה ===================== */
 
 test('תל אביב — 15 ביולי חסום גם ברוח מושלמת', () => {
-  const v = scoreSpot(spot('tel-aviv-geula'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 6, 15, 9), {});
+  const v = scoreSpot(spot('tel-aviv'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 6, 15, 9), {});
   assert.equal(v.level, 'blocked');
   assert.notEqual(v.level, 'red', 'אסור אינו מסוכן — מצב נפרד');
   assert.match(v.reason.headline, /יולי/);
@@ -130,14 +148,14 @@ test('תל אביב — 15 ביולי חסום גם ברוח מושלמת', () =
 
 test('תל אביב — שבת במאי חסומה, יום חול במאי פתוח', () => {
   // 2026-05-16 הוא שבת, 2026-05-13 הוא רביעי
-  const sat = scoreSpot(spot('tel-aviv-geula'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 4, 16, 9), {});
+  const sat = scoreSpot(spot('tel-aviv'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 4, 16, 9), {});
   assert.equal(sat.level, 'blocked');
-  const wed = scoreSpot(spot('tel-aviv-geula'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 4, 13, 9), {});
+  const wed = scoreSpot(spot('tel-aviv'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 4, 13, 9), {});
   assert.notEqual(wed.level, 'blocked');
 });
 
 test('תל אביב — בדצמבר אין חסימה', () => {
-  const v = scoreSpot(spot('tel-aviv-geula'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 11, 9, 9), {});
+  const v = scoreSpot(spot('tel-aviv'), fc({ kt: 18, gust: 21, dir: 290 }), null, Date.UTC(2026, 11, 9, 9), {});
   assert.notEqual(v.level, 'blocked');
 });
 
@@ -289,9 +307,12 @@ test('טווחי מספרים עטופים ב-dir=ltr', () => {
 });
 
 test('סכנות חמורות מופיעות בהסתייגויות גם כשהרוח מצוינת', () => {
-  const v = scoreSpot(spot('eilat-north'), fc({ kt: 18, dir: 0 }), null, Date.UTC(2026, 7, 18, 13), {});
+  const v = scoreSpot(spot('eilat-reef-raf'), fc({ kt: 18, dir: 0 }), null, Date.UTC(2026, 7, 18, 13), {});
   const joined = v.reason.caveats.join(' ');
-  assert.match(joined, /גבולות בינלאומיים/);
+  // ההסתייגויות נושאות את סכנות ה-high של הספוט, יהיה נוסחן אשר יהיה
+  const high = spot('eilat-reef-raf').hazards.filter(h => h.severity === 'high');
+  assert.ok(high.length > 0, 'Reef Raf must carry high-severity hazards');
+  for (const h of high) assert.ok(joined.includes(h.note_he), `missing hazard: ${h.note_he.slice(0, 30)}`);
 });
 
 /* ===================== שלמות הרג'יסטר ===================== */
@@ -373,4 +394,95 @@ test('gear advice never appears on a no-go card', async () => {
     'a red card must not offer gear advice — it reads as encouragement');
   const green = scoreSpot(spot('bat-yam'), fc({ kt: 18, gust: 21, dir: 300 }), null, Date.UTC(2026, 10, 18, 9), prefs);
   assert.ok(renderDetail(spot('bat-yam'), green, { prefs }).includes('מה לקחת'));
+});
+
+test('candidate spots — no kite evidence means no green', () => {
+  const cands = REG.spots.filter(s => s.status === 'candidate');
+  assert.ok(cands.length > 0, 'the registry should carry some candidate spots');
+  for (const s of cands) {
+    const v = scoreSpot(s, fc({ kt: 19, gust: 22, dir: s.shore_normal_deg + 40 }), null, Date.UTC(2026, 10, 18, 9), {});
+    assert.notEqual(v.level, 'green', s.id);
+  }
+});
+
+test('every spot has a defensible shore normal', () => {
+  for (const s of REG.spots) {
+    if (s.region === 'kinneret' || s.region === 'eilat') continue;
+    // כל חוף ים תיכוני בישראל פונה למערב במובן הרחב. ניצב מחוץ לטווח
+    // הזה הוא כמעט בוודאות טעות סימן, וטעות סימן הופכת בטוח למסוכן.
+    // אי אפשר לקבוע טווח אחד לכל החוף — חופי מפרץ חיפה פונים דרומה-מערבה
+    // וראש הכרמל צפונה-מערבה. מה שכן אי אפשר: חוף ים תיכוני שפונה מזרחה,
+    // כי מזרחה שם זו יבשה. טעות סימן בניצב הופכת "בטוח" ל"מסוכן".
+    const facesEast = s.shore_normal_deg > 45 && s.shore_normal_deg < 135;
+    assert.ok(!facesEast,
+      `${s.id} faces ${s.shore_normal_deg}° — inland. A sign error here inverts every verdict.`);
+    if (s.geo_confidence !== 'high') {
+      assert.ok((s._verify || []).includes('shore_normal_deg'), `${s.id} must flag its normal for verification`);
+    }
+  }
+});
+
+test('the summer sea breeze is rideable at the classic Med spots', () => {
+  // רוח מערבית־צפון־מערבית של אחר הצהריים, ~295°, היא הבריזה הקלאסית
+  for (const id of ['bat-yam', 'tel-aviv', 'betzet', 'ashdod']) {
+    const s = spot(id);
+    const v = scoreSpot(s, fc({ kt: 18, gust: 21, dir: 295 }), null, Date.UTC(2026, 10, 18, 9), {});
+    assert.ok(['onshore', 'side_onshore', 'side_shore'].includes(v.dirCls),
+      `${id}: the classic sea breeze must not classify as offshore (got ${v.dirCls})`);
+  }
+});
+
+test('no spot is accidentally banned all year round', () => {
+  // הרשומה שתיארה "אין הגבלה בנובמבר–מרץ" הגיעה מהמחקר עם type:"ban"
+  // וחסמה את תל אביב 12 חודשים בשנה. שער מבני, לא בדיקת רגרסיה.
+  for (const s of REG.spots) {
+    const blocked = [];
+    for (let m = 0; m < 12; m++) {
+      const midMonth = Date.UTC(2026, m, 15, 10);
+      if (legalGate(s, midMonth, 0)) blocked.push(m + 1);
+    }
+    if (blocked.length === 12) {
+      // איסור קבוע הוא נתון לגיטימי (הרצליה אוסרת קייט בחוף המוכרז),
+      // אבל הוא חייב להיות רשומה אחת מפורשת ולא תוצר לוואי של חפיפה
+      // בין איסורים חלקיים — שם זו טעות נתונים ששולחת מישהו הביתה.
+      const permanent = (s.legal || []).filter(r => r.type === 'ban' && !r.months && !r.weekdays);
+      assert.equal(permanent.length, 1,
+        `${s.id} is blocked in all 12 months but has no single explicit year-round ban — check legal[] types`);
+    }
+  }
+});
+
+test('Tel Aviv legal calendar reads correctly across the year', () => {
+  const s = spot('tel-aviv');
+  const at = (m, d) => scoreSpot(s, fc({ kt: 18, gust: 21, dir: 295 }), null, Date.UTC(2026, m - 1, d, 9), {});
+  assert.equal(at(7, 15).level, 'blocked', 'July is a total ban');
+  assert.equal(at(8, 15).level, 'blocked', 'August is a total ban');
+  assert.notEqual(at(12, 9).level, 'blocked', 'December is unrestricted');
+  assert.notEqual(at(2, 11).level, 'blocked', 'February is unrestricted');
+  assert.equal(at(5, 16).level, 'blocked', '16/5/2026 is a Saturday in a shoulder month');
+  assert.notEqual(at(5, 13).level, 'blocked', '13/5/2026 is a Wednesday in a shoulder month');
+});
+
+test('Reef Raf: the gulf northerly is rideable, and it sits on a knife edge', () => {
+  const s = spot('eilat-reef-raf');
+  // החוף פונה 115°, ולכן צפונית טהורה (0°) נופלת על 115° מהניצב —
+  // שלוש מעלות מעבר לגבול side_shore/side_offshore. זה אמיתי ולא באג:
+  // הרוח באמת נושבת שם בזווית שדוחפת מעט מהחוף. הכלל שנבדק כאן הוא
+  // שהיא לעולם לא נקראת כאופשור מלא, ושהיא לא מייצרת אדום.
+  assert.equal(directionClass(0, s).overridden, false, 'no exception is needed here');
+  for (const w of [0, 10, 20, 350]) {
+    const d = directionClass(w, s);
+    assert.notEqual(d.cls, 'offshore', `wind from ${w}° must never read as full offshore at Reef Raf`);
+  }
+  assert.equal(directionClass(15, s).cls, 'side_shore', 'NNE — the classic gulf direction — is clean side-shore');
+  const v = scoreSpot(s, fc({ kt: 19, gust: 22, dir: 15 }), null, Date.UTC(2026, 7, 18, 13), {});
+  assert.notEqual(v.level, 'red');
+});
+
+test('Eilat north beach is no longer dressed up as a kite spot', () => {
+  const s = spot('eilat-north');
+  assert.equal(s.direction_overrides.length, 0,
+    'an offshore-is-normal exception on a beach that is not the kite beach is the dangerous message');
+  const v = scoreSpot(s, fc({ kt: 19, gust: 22, dir: 0 }), null, Date.UTC(2026, 7, 18, 13), {});
+  assert.equal(v.level, 'blocked');
 });

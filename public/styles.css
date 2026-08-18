@@ -960,3 +960,9 @@ body.busy .status::after {
   background: var(--accent-soft); color: var(--accent-ink);
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
+
+/* ספוט שאין עדות שגולשים בו — נראה אחרת, ולא מגיע לירוק */
+.chip-cand {
+  background: var(--surface-3); color: var(--text-3);
+  border-color: var(--border); border-style: dashed;
+}

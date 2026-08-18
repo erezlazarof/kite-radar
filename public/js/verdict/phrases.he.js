@@ -33,7 +33,7 @@ export const FLAG_HE = {
   gusty:           { icon: '⚠', short: 'משבים', text: 'הרוח לא יציבה — פערי משב גדולים.', severity: 'critical' },
   model_spread:    { icon: '≈', short: 'מודלים חלוקים', text: 'מודלי התחזית חלוקים ביניהם.', severity: 'critical' },
   stale:           { icon: '⏱', short: 'נתון ישן', text: 'הנתון לא טרי.', severity: 'critical' },
-  unverified_spot: { icon: '◎', short: 'לא אומת', text: 'ספוט שלא אומת.', severity: 'critical' },
+  unverified_spot: { icon: '◎', short: 'לא אומת', text: 'לא נמצאה עדות שגולשים כאן בפועל. הגיאומטריה של החוף נגזרה ממפה ולא אומתה — ולכן אין דירוג ירוק.', severity: 'critical' },
   skill_advanced:  { icon: '⚑', short: 'למתקדמים', text: 'ספוט למתקדמים בלבד.', severity: 'skip' },
   hard_launch:     { icon: '⚠', text: 'הרוח מגיעה ישר מהים — ההמראה והנחיתה קשות יותר, אבל היא גם מחזירה אותך לחוף.', severity: 'note' },
 };
@@ -132,6 +132,9 @@ export function buildCaveats(v, spot) {
   }
   if (spot.source === 'user') {
     out.push('ספוט שהוספת בעצמך. הגיאומטריה לא נבדקה, ולכן אין דירוג ירוק.');
+  }
+  if (spot.shore_normal_basis) {
+    out.push('כיוון החוף נגזר כך: ' + spot.shore_normal_basis);
   }
   if (spot.marine?.confidence === 'estimate' && spot.marine.note_he) {
     out.push(spot.marine.note_he);

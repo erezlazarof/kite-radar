@@ -98,8 +98,16 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
   if (dir.cls === 'side_offshore') level = cap(level, 'yellow');
   if (dir.cls === 'onshore') score = Math.min(score, 78);
 
-  // גיאומטריה שלא נבדקה ע"י אדם לא מייצרת ירוק
-  if (spot.source === 'user') level = cap(level, 'yellow');
+  // גיאומטריה שלא נבדקה ע"י אדם לא מייצרת ירוק.
+  // חל גם על ספוטים שהמשתמש הוסיף וגם על "מועמדים" — חופים שהופיעו
+  // ברשימות תחזית אבל בלי שום עדות שמישהו באמת גולש שם. ניצב-חוף
+  // שגוי מייצר פסק דין בטיחותי שגוי בביטחון מלא.
+  if (spot.source === 'user' || spot.status === 'candidate') {
+    level = cap(level, 'yellow');
+    // ספוט "מועמד" נושא תג ייעודי בכרטיס; דגל נוסף היה אומר את אותו
+    // הדבר פעמיים, וחזרה מאמנת את העין להתעלם מדגלים.
+    if (spot.source === 'user') flags.push('unverified_spot');
+  }
 
   const spreadKt = forecast.models ? modelSpreadKt(forecast.models, window) : null;
   if (spreadKt != null && spreadKt > MODEL_SPREAD_DEMOTE_KT) {
