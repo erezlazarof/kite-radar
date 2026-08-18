@@ -16,6 +16,7 @@ export const state = {
   obs: null,
   models: {},          // spotId → { data, fetchedAt }
   day: 0,
+  region: 'all',
   expanded: null,
   prefs: loadPrefs(),
   now: () => Date.now(),

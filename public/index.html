@@ -32,6 +32,13 @@
       </span>
     </div>
     <div id="status" class="status"></div>
+    <button id="settings" class="icon-btn" title="הגדרות" aria-label="הגדרות">
+      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M10 2.4v2.1M10 15.5v2.1M17.6 10h-2.1M4.5 10H2.4M15.4 4.6l-1.5 1.5M6.1 13.9l-1.5 1.5M15.4 15.4l-1.5-1.5M6.1 6.1L4.6 4.6"
+              fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+    </button>
     <button id="theme" class="icon-btn" title="בהיר / כהה" aria-label="החלף ערכת צבעים">
       <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
         <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
@@ -51,6 +58,8 @@
     <button data-day="1">מחר</button>
     <button data-day="2">מחרתיים</button>
   </nav>
+
+  <nav id="regions" class="regions" aria-label="בחירת אזור"></nav>
 
   <main id="cards" class="cards" aria-live="polite">
     <p class="sr-only">טוען תחזית…</p>
@@ -76,17 +85,34 @@
 
   <footer class="footer">
     <p id="disclaimer" class="disclaimer"></p>
-    <div class="weight-row">
-      <label class="weight" for="weight">
-        <span class="weight-label">משקל הגולש</span>
-        <span class="weight-value"><output id="weight-val" class="num">75</output> ק״ג</span>
-      </label>
-      <input id="weight" type="range" min="45" max="120" step="1" value="75" aria-label="משקל הגולש בקילוגרם">
-    </div>
     <p id="attribution" class="attribution"></p>
   </footer>
 
 </div>
+
+<dialog id="sheet" class="sheet" aria-label="הגדרות">
+  <form method="dialog" class="sheet-head">
+    <h2>הגדרות</h2>
+    <button class="sheet-x" aria-label="סגור">✕</button>
+  </form>
+
+  <div class="sheet-body">
+    <div class="setting">
+      <div class="setting-head">
+        <label class="setting-title" for="weight">המשקל שלך</label>
+        <span class="setting-value"><output id="weight-val" class="num">75</output> ק״ג</span>
+      </div>
+      <input id="weight" type="range" min="45" max="120" step="1" value="75" aria-describedby="weight-why">
+      <p id="weight-why" class="setting-why">
+        גולש כבד יותר צריך יותר רוח כדי לצאת על אותו עפיפון. המשקל מזיז את כל ספי
+        פסק הדין — בערך <span dir="ltr">3</span> קשר לכל <span dir="ltr">15</span> ק״ג —
+        וגם את גודל העפיפון המומלץ.
+      </p>
+      <p id="weight-effect" class="setting-effect"></p>
+    </div>
+  </div>
+</dialog>
+
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

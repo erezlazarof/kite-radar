@@ -1,8 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": "2026-08-18",
   "defaults": {
-    "daytime_window": { "start": 7, "end": 19 },
+    "daytime_window": {
+      "start": 7,
+      "end": 19
+    },
     "min_block_hours": 2
   },
   "spots": [
@@ -11,224 +14,1045 @@
       "name_he": "בצת",
       "name_en": "Betzet",
       "region": "north",
-      "lat": 33.065, "lon": 35.107,
+      "lat": 33.065,
+      "lon": 35.107,
       "shore_normal_deg": 270,
       "direction_overrides": [],
       "season": null,
       "daytime_window": null,
       "legal": [],
       "hazards": [
-        { "code": "rocks_waterline", "severity": "med", "note_he": "סלעים על קו המים — המראה ונחיתה דורשות תשומת לב." }
+        {
+          "code": "rocks_waterline",
+          "severity": "med",
+          "note_he": "סלעים על קו המים — המראה ונחיתה דורשות תשומת לב."
+        }
       ],
-      "marine": { "available": true, "provider": "best_match", "lat": 33.065, "lon": 35.07, "confidence": "verified", "note_he": null },
-      "live_stations": { "ims": "ELON", "isramar": null, "meteotech": null, "distance_km": 9.5, "representative": false },
-      "models": { "force": [], "exclude": [], "reason_he": null },
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 33.065,
+        "lon": 35.07,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "ELON",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 9.5,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
       "sub_spots": [],
       "skill_floor": "intermediate",
       "source": "core",
       "notes_he": "ספוט הצפוניות הקנוני. הרוח מגיעה כאן מוקדם וחזק יותר מכל הצפון.",
-      "_verify": ["lat", "lon", "live_stations.ims"]
+      "_verify": [
+        "lat",
+        "lon",
+        "live_stations.ims"
+      ]
     },
     {
       "id": "achziv",
       "name_he": "אכזיב",
       "name_en": "Achziv",
       "region": "north",
-      "lat": 33.048, "lon": 35.102,
+      "lat": 33.048,
+      "lon": 35.102,
       "shore_normal_deg": 272,
       "direction_overrides": [],
       "season": null,
       "daytime_window": null,
       "legal": [
-        { "type": "reserve", "months": null, "weekdays": null, "zone_he": "פארק לאומי אכזיב",
-          "note_he": "חלק מהחוף בתחום פארק לאומי — לוודא נקודת כניסה מותרת.", "source_url": null, "verified": false }
+        {
+          "type": "reserve",
+          "months": null,
+          "weekdays": null,
+          "zone_he": "פארק לאומי אכזיב",
+          "note_he": "חלק מהחוף בתחום פארק לאומי — לוודא נקודת כניסה מותרת.",
+          "source_url": null,
+          "verified": false
+        }
       ],
       "hazards": [
-        { "code": "reef", "severity": "med", "note_he": "מפרצוני סלע וריפים — רדוד ובלתי נראה בגאות." }
+        {
+          "code": "reef",
+          "severity": "med",
+          "note_he": "מפרצוני סלע וריפים — רדוד ובלתי נראה בגאות."
+        }
       ],
-      "marine": { "available": true, "provider": "best_match", "lat": 33.048, "lon": 35.065, "confidence": "verified", "note_he": null },
-      "live_stations": { "ims": "ROSH HANIQRA", "isramar": null, "meteotech": null, "distance_km": 6.5, "representative": false },
-      "models": { "force": [], "exclude": [], "reason_he": null },
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 33.048,
+        "lon": 35.065,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "ROSH HANIQRA",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 6.5,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
       "sub_spots": [],
       "skill_floor": "intermediate",
       "source": "core",
       "notes_he": null,
-      "_verify": ["lat", "lon", "legal[0]", "live_stations.ims"]
+      "_verify": [
+        "lat",
+        "lon",
+        "legal[0]",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "nahariya",
+      "name_he": "נהריה",
+      "name_en": "Nahariya",
+      "region": "north",
+      "lat": 33.005,
+      "lon": 35.09,
+      "shore_normal_deg": 275,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "swimmers",
+          "severity": "med",
+          "note_he": "חוף רחצה מוסדר — מתרחצים בעונה."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 33.005,
+        "lon": 35.055,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "SHAVE ZIYYON",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 2.5,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "intermediate",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
     },
     {
       "id": "shavei-tzion",
       "name_he": "שבי ציון",
       "name_en": "Shavei Tzion",
       "region": "north",
-      "lat": 32.985, "lon": 35.087,
+      "lat": 32.985,
+      "lon": 35.087,
       "shore_normal_deg": 275,
       "direction_overrides": [],
       "season": null,
       "daytime_window": null,
       "legal": [
-        { "type": "reserve", "months": null, "weekdays": null, "zone_he": "שמורת חוף וים שבי ציון",
-          "note_he": "החוף בתחום שמורת טבע. חוקיות הכניסה והגלישה לא אומתה מול רשות הטבע והגנים.", "source_url": null, "verified": false }
+        {
+          "type": "reserve",
+          "months": null,
+          "weekdays": null,
+          "zone_he": "שמורת חוף וים שבי ציון",
+          "note_he": "החוף בתחום שמורת טבע. חוקיות הכניסה והגלישה לא אומתה מול רשות הטבע והגנים.",
+          "source_url": null,
+          "verified": false
+        }
       ],
       "hazards": [
-        { "code": "reef", "severity": "high", "note_he": "ריף מול החוף — סלעים טבועים שלא נראים בגאות." }
+        {
+          "code": "reef",
+          "severity": "high",
+          "note_he": "ריף מול החוף — סלעים טבועים שלא נראים בגאות."
+        }
       ],
-      "marine": { "available": true, "provider": "best_match", "lat": 32.985, "lon": 35.05, "confidence": "verified", "note_he": null },
-      "live_stations": { "ims": "SHAVE ZIYYON", "isramar": null, "meteotech": null, "distance_km": 0.9, "representative": true },
-      "models": { "force": [], "exclude": [], "reason_he": null },
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.985,
+        "lon": 35.05,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "SHAVE ZIYYON",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 0.9,
+        "representative": true
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
       "sub_spots": [],
       "skill_floor": "intermediate",
       "source": "core",
       "notes_he": "תחנת המדידה של השירות המטאורולוגי יושבת פחות מקילומטר מהחוף — הכיסוי החי הטוב ביותר בפלטפורמה.",
-      "_verify": ["legal[0]"]
+      "_verify": [
+        "legal[0]"
+      ]
     },
     {
       "id": "bat-galim",
       "name_he": "בת גלים, חיפה",
       "name_en": "Bat Galim, Haifa",
       "region": "north",
-      "lat": 32.828, "lon": 34.981,
+      "lat": 32.828,
+      "lon": 34.981,
       "shore_normal_deg": 290,
       "direction_overrides": [],
       "season": null,
       "daytime_window": null,
       "legal": [],
       "hazards": [
-        { "code": "breakwater", "severity": "med", "note_he": "שוברי גלים ותנועת ספנות בכניסה לנמל חיפה." }
+        {
+          "code": "breakwater",
+          "severity": "med",
+          "note_he": "שוברי גלים ותנועת ספנות בכניסה לנמל חיפה."
+        }
       ],
-      "marine": { "available": true, "provider": "best_match", "lat": 32.83, "lon": 34.95, "confidence": "verified", "note_he": null },
-      "live_stations": { "ims": "HAIFA UNIVERSITY", "isramar": null, "meteotech": null, "distance_km": 6.0, "representative": false },
-      "models": { "force": [], "exclude": [], "reason_he": null },
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.83,
+        "lon": 34.95,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "HAIFA UNIVERSITY",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 6,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
       "sub_spots": [],
       "skill_floor": "intermediate",
       "source": "core",
       "notes_he": null,
-      "_verify": ["lat", "lon", "shore_normal_deg", "live_stations.ims"]
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "atlit",
+      "name_he": "עתלית",
+      "name_en": "Atlit",
+      "region": "north",
+      "lat": 32.7,
+      "lon": 34.936,
+      "shore_normal_deg": 270,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "reef",
+          "severity": "med",
+          "note_he": "שוניות וסלעים בקטעים — לבדוק נקודת כניסה."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.7,
+        "lon": 34.901,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "EN KARMEL",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 4.5,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "intermediate",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "habonim",
+      "name_he": "הבונים־דור",
+      "name_en": "HaBonim-Dor",
+      "region": "north",
+      "lat": 32.635,
+      "lon": 34.917,
+      "shore_normal_deg": 268,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "reserve",
+          "severity": "low",
+          "note_he": "שמורת חוף הבונים — לוודא נקודת כניסה מותרת."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.635,
+        "lon": 34.882,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "EN KARMEL",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 5,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "intermediate",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "hadera",
+      "name_he": "חדרה",
+      "name_en": "Hadera",
+      "region": "center",
+      "lat": 32.47,
+      "lon": 34.878,
+      "shore_normal_deg": 270,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "industry",
+          "severity": "med",
+          "note_he": "תחנת הכוח ומוצא המים החמים — להתרחק."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.47,
+        "lon": 34.843,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "HADERA PORT",
+        "isramar": "hadera",
+        "meteotech": null,
+        "distance_km": 3,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "intermediate",
+      "source": "core",
+      "notes_he": "מצוף חדרה של איסראמר יושב מול החוף הזה — זו נקודת אימות הגלים הטובה ביותר בחוף.",
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "poleg",
+      "name_he": "פולג, נתניה",
+      "name_en": "Poleg, Netanya",
+      "region": "center",
+      "lat": 32.269,
+      "lon": 34.836,
+      "shore_normal_deg": 268,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "cliff",
+          "severity": "low",
+          "note_he": "מצוק חוף — סבך רוח בקרבת הצוק."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.269,
+        "lon": 34.801,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "HADERA PORT",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 23,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "intermediate",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "herzliya",
+      "name_he": "הרצליה",
+      "name_en": "Herzliya",
+      "region": "center",
+      "lat": 32.163,
+      "lon": 34.796,
+      "shore_normal_deg": 270,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "breakwater",
+          "severity": "med",
+          "note_he": "מרינה ושוברי גלים בצפון החוף."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.163,
+        "lon": 34.761,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "TEL AVIV COAST",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 11,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "intermediate",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
     },
     {
       "id": "tel-aviv-geula",
       "name_he": "תל אביב — גאולה",
       "name_en": "Tel Aviv - Geula",
       "region": "center",
-      "lat": 32.077, "lon": 34.765,
+      "lat": 32.077,
+      "lon": 34.765,
       "shore_normal_deg": 275,
       "direction_overrides": [],
       "season": null,
       "daytime_window": null,
       "legal": [
-        { "type": "ban", "months": [7, 8], "weekdays": null, "zone_he": "כל חופי תל אביב",
+        {
+          "type": "ban",
+          "months": [
+            7,
+            8
+          ],
+          "weekdays": null,
+          "zone_he": "כל חופי תל אביב",
           "short_he": "אסור — יולי ואוגוסט",
-          "note_he": "איסור גלישת קייט מוחלט בחודשי יולי ואוגוסט.", "source_url": null, "verified": false },
-        { "type": "ban", "months": [4, 5, 6, 9, 10], "weekdays": [5, 6], "zone_he": "כל חופי תל אביב",
+          "note_he": "איסור גלישת קייט מוחלט בחודשי יולי ואוגוסט.",
+          "source_url": null,
+          "verified": false
+        },
+        {
+          "type": "ban",
+          "months": [
+            4,
+            5,
+            6,
+            9,
+            10
+          ],
+          "weekdays": [
+            5,
+            6
+          ],
+          "zone_he": "כל חופי תל אביב",
           "short_he": "אסור — שישי ושבת בעונה",
-          "note_he": "אסור בשישי, שבת וחגים. בחודשים אלה מותר בימי חול בלבד.", "source_url": null, "verified": false },
-        { "type": "zone", "months": null, "weekdays": null, "zone_he": "אזור המצופים בחוף גאולה",
-          "note_he": "הגלישה מותרת רק בתוך אזור המצופים המסומן ליד מגדל האופרה. יציאה מהאזור צפויה בקנס.", "source_url": null, "verified": false }
+          "note_he": "אסור בשישי, שבת וחגים. בחודשים אלה מותר בימי חול בלבד.",
+          "source_url": null,
+          "verified": false
+        },
+        {
+          "type": "zone",
+          "months": null,
+          "weekdays": null,
+          "zone_he": "אזור המצופים בחוף גאולה",
+          "note_he": "הגלישה מותרת רק בתוך אזור המצופים המסומן ליד מגדל האופרה. יציאה מהאזור צפויה בקנס.",
+          "source_url": null,
+          "verified": false
+        }
       ],
       "hazards": [
-        { "code": "urban", "severity": "high", "note_he": "מכשולים עירוניים בעשרות מטרים מהחוף — עמודים, מבנים, כביש." },
-        { "code": "swimmers", "severity": "med", "note_he": "מתרחצים בעונת הרחצה." }
+        {
+          "code": "urban",
+          "severity": "high",
+          "note_he": "מכשולים עירוניים בעשרות מטרים מהחוף — עמודים, מבנים, כביש."
+        },
+        {
+          "code": "swimmers",
+          "severity": "med",
+          "note_he": "מתרחצים בעונת הרחצה."
+        }
       ],
-      "marine": { "available": true, "provider": "best_match", "lat": 32.077, "lon": 34.73, "confidence": "verified", "note_he": null },
-      "live_stations": { "ims": "TEL AVIV COAST", "isramar": "hadera", "meteotech": null, "distance_km": 2.3, "representative": true },
-      "models": { "force": [], "exclude": [], "reason_he": null },
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.077,
+        "lon": 34.73,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "TEL AVIV COAST",
+        "isramar": "hadera",
+        "meteotech": null,
+        "distance_km": 2.3,
+        "representative": true
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
       "sub_spots": [],
       "skill_floor": "advanced",
       "source": "core",
       "notes_he": "שכבת החוקיות כאן קובעת יותר מהרוח. התאריכים לא אומתו מול חוק העזר העירוני.",
-      "_verify": ["legal[0]", "legal[1]", "legal[2]"]
+      "_verify": [
+        "legal[0]",
+        "legal[1]",
+        "legal[2]"
+      ]
     },
     {
       "id": "bat-yam",
       "name_he": "בת ים",
       "name_en": "Bat Yam",
       "region": "center",
-      "lat": 32.017, "lon": 34.738,
+      "lat": 32.017,
+      "lon": 34.738,
       "shore_normal_deg": 270,
       "direction_overrides": [],
       "season": null,
       "daytime_window": null,
       "legal": [],
       "hazards": [
-        { "code": "swimmers", "severity": "med", "note_he": "חוף טאיו הומה מתרחצים בעונת הרחצה." }
+        {
+          "code": "swimmers",
+          "severity": "med",
+          "note_he": "חוף טאיו הומה מתרחצים בעונת הרחצה."
+        }
       ],
-      "marine": { "available": true, "provider": "best_match", "lat": 32.017, "lon": 34.70, "confidence": "verified", "note_he": null },
-      "live_stations": { "ims": "TEL AVIV COAST", "isramar": "hadera", "meteotech": null, "distance_km": 4.7, "representative": true },
-      "models": { "force": [], "exclude": [], "reason_he": null },
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 32.017,
+        "lon": 34.7,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "TEL AVIV COAST",
+        "isramar": "hadera",
+        "meteotech": null,
+        "distance_km": 4.7,
+        "representative": true
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
       "sub_spots": [
-        { "id": "sela", "name_he": "חוף הסלע", "shore_normal_deg": 270, "note_he": "מים שטוחים מאחורי הריף. מתקדמים בלבד — סלעים טבועים." }
+        {
+          "id": "sela",
+          "name_he": "חוף הסלע",
+          "shore_normal_deg": 270,
+          "note_he": "מים שטוחים מאחורי הריף. מתקדמים בלבד — סלעים טבועים."
+        }
       ],
       "skill_floor": "beginner",
       "source": "core",
       "notes_he": "המדידה החיה מגיעה מאותו חיישן של תל אביב, כ-5 קילומטר צפונה.",
-      "_verify": ["lat", "lon"]
+      "_verify": [
+        "lat",
+        "lon"
+      ]
+    },
+    {
+      "id": "palmachim",
+      "name_he": "פלמחים",
+      "name_en": "Palmachim",
+      "region": "center",
+      "lat": 31.93,
+      "lon": 34.699,
+      "shore_normal_deg": 268,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "rip",
+          "severity": "med",
+          "note_he": "זרמי חוף בשפך שורק."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 31.93,
+        "lon": 34.664,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "TEL AVIV COAST",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 18,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "beginner",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "ashdod",
+      "name_he": "אשדוד",
+      "name_en": "Ashdod",
+      "region": "south",
+      "lat": 31.815,
+      "lon": 34.63,
+      "shore_normal_deg": 265,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "port",
+          "severity": "med",
+          "note_he": "תנועת ספנות בכניסה לנמל — להתרחק דרומה."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 31.815,
+        "lon": 34.595,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "ASHDOD PORT",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 4,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "beginner",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "ashkelon",
+      "name_he": "אשקלון",
+      "name_en": "Ashkelon",
+      "region": "south",
+      "lat": 31.68,
+      "lon": 34.55,
+      "shore_normal_deg": 260,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [],
+      "hazards": [
+        {
+          "code": "swimmers",
+          "severity": "med",
+          "note_he": "חופי רחצה מוסדרים בעונה."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 31.68,
+        "lon": 34.515,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "ASHQELON PORT",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 3.5,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "intermediate",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
+    },
+    {
+      "id": "zikim",
+      "name_he": "זיקים",
+      "name_en": "Zikim",
+      "region": "south",
+      "lat": 31.61,
+      "lon": 34.52,
+      "shore_normal_deg": 255,
+      "direction_overrides": [],
+      "season": null,
+      "daytime_window": null,
+      "legal": [
+        {
+          "type": "boundary",
+          "months": null,
+          "weekdays": null,
+          "zone_he": "גבול רצועת עזה — דרום",
+          "note_he": "החוף הדרומי ביותר בישראל. אזור צבאי סגור מדרום, וכניסה תלויה במצב הביטחוני.",
+          "source_url": null,
+          "verified": false
+        }
+      ],
+      "hazards": [
+        {
+          "code": "border",
+          "severity": "high",
+          "note_he": "קרבה לגבול רצועת עזה. לוודא מצב ביטחוני והוראות פתוחות לפני נסיעה."
+        }
+      ],
+      "marine": {
+        "available": true,
+        "provider": "best_match",
+        "lat": 31.61,
+        "lon": 34.485,
+        "confidence": "verified",
+        "note_he": null
+      },
+      "live_stations": {
+        "ims": "ASHQELON PORT",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 8.5,
+        "representative": false
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
+      "sub_spots": [],
+      "skill_floor": "advanced",
+      "source": "core",
+      "notes_he": null,
+      "_verify": [
+        "lat",
+        "lon",
+        "shore_normal_deg",
+        "live_stations.ims"
+      ]
     },
     {
       "id": "kinneret-diamond",
       "name_he": "כנרת — היהלום",
       "name_en": "Kinneret - Diamond",
       "region": "kinneret",
-      "lat": 32.830, "lon": 35.648,
+      "lat": 32.83,
+      "lon": 35.648,
       "shore_normal_deg": 270,
       "direction_overrides": [],
-      "season": { "from": "05-20", "to": "09-10", "short_he": "מחוץ לעונה", "note_he": "עונת הרוח התרמית בכנרת נמשכת מסוף מאי עד תחילת ספטמבר. מחוץ לתאריכים האלה כמעט ואין רוח מספקת." },
-      "daytime_window": { "start": 12, "end": 18 },
+      "season": {
+        "from": "05-20",
+        "to": "09-10",
+        "short_he": "מחוץ לעונה",
+        "note_he": "עונת הרוח התרמית בכנרת נמשכת מסוף מאי עד תחילת ספטמבר. מחוץ לתאריכים האלה כמעט ואין רוח מספקת."
+      },
+      "daytime_window": {
+        "start": 12,
+        "end": 18
+      },
       "legal": [],
       "hazards": [
-        { "code": "shallow_rocks", "severity": "med", "note_he": "מפלס משתנה — סלעים חשופים כשהמפלס נמוך. לבדוק בכניסה." },
-        { "code": "no_rescue", "severity": "high", "note_he": "אין סירת חילוץ קבועה. אגם — אין גלים שיחזירו אותך לחוף." }
+        {
+          "code": "shallow_rocks",
+          "severity": "med",
+          "note_he": "מפלס משתנה — סלעים חשופים כשהמפלס נמוך. לבדוק בכניסה."
+        },
+        {
+          "code": "no_rescue",
+          "severity": "high",
+          "note_he": "אין סירת חילוץ קבועה. אגם — אין גלים שיחזירו אותך לחוף."
+        }
       ],
-      "marine": { "available": false, "provider": null, "lat": null, "lon": null, "confidence": "none",
-                  "note_he": "אין מודל גלים אמין לכנרת. מוצגת רוח בלבד." },
-      "live_stations": { "ims": "LEV KINERET", "isramar": null, "meteotech": null, "distance_km": 5.0, "representative": true },
-      "models": { "force": [], "exclude": [], "reason_he": null },
+      "marine": {
+        "available": false,
+        "provider": null,
+        "lat": null,
+        "lon": null,
+        "confidence": "none",
+        "note_he": "אין מודל גלים אמין לכנרת. מוצגת רוח בלבד."
+      },
+      "live_stations": {
+        "ims": "LEV KINERET",
+        "isramar": null,
+        "meteotech": null,
+        "distance_km": 5,
+        "representative": true
+      },
+      "models": {
+        "force": [],
+        "exclude": [],
+        "reason_he": null
+      },
       "sub_spots": [
-        { "id": "bteha", "name_he": "בטיחה", "shore_normal_deg": 265, "note_he": "צפונה מהיהלום, אותו משטר רוח." }
+        {
+          "id": "bteha",
+          "name_he": "בטיחה",
+          "shore_normal_deg": 265,
+          "note_he": "צפונה מהיהלום, אותו משטר רוח."
+        }
       ],
       "skill_floor": "intermediate",
       "source": "core",
       "notes_he": "החוף המזרחי. המערבית של אחר הצהריים מגיעה כאן כרוח פנימה — באותה רוח בדיוק, בגינוסר ובצמח היא רוח החוצה.",
-      "_verify": ["lat", "lon", "season"]
+      "_verify": [
+        "lat",
+        "lon",
+        "season"
+      ]
     },
     {
       "id": "eilat-north",
       "name_he": "אילת — חוף צפוני",
       "name_en": "Eilat - North Beach",
       "region": "eilat",
-      "lat": 29.553, "lon": 34.955,
+      "lat": 29.553,
+      "lon": 34.955,
       "shore_normal_deg": 180,
       "direction_overrides": [
         {
-          "from": 320, "to": 40,
+          "from": 320,
+          "to": 40,
           "class": "offshore_managed",
           "score": 78,
-          "flags": ["rescue_boat", "upwind_skill"],
+          "flags": [
+            "rescue_boat",
+            "upwind_skill"
+          ],
           "note_he": "הצפונית התרמית היא הרוח הרגילה כאן. רוח החוצה לפי ההגדרה, אבל זה מצב הרכיבה הנורמלי: מים שטוחים, מועדונים עם סירות. חובה יכולת חתירה נגד הרוח, ולוודא שיש סירה בים."
         }
       ],
       "season": null,
-      "daytime_window": { "start": 12, "end": 18 },
+      "daytime_window": {
+        "start": 12,
+        "end": 18
+      },
       "legal": [
-        { "type": "boundary", "months": null, "weekdays": null, "zone_he": "גבול ירדן — מזרח",
-          "note_he": "לא לחצות מזרחה מעבר לקו המצופים.", "source_url": null, "verified": false },
-        { "type": "boundary", "months": null, "weekdays": null, "zone_he": "גבול מצרים — דרום-מערב",
-          "note_he": "לא להמשיך דרומה-מערבה.", "source_url": null, "verified": false }
+        {
+          "type": "boundary",
+          "months": null,
+          "weekdays": null,
+          "zone_he": "גבול ירדן — מזרח",
+          "note_he": "לא לחצות מזרחה מעבר לקו המצופים.",
+          "source_url": null,
+          "verified": false
+        },
+        {
+          "type": "boundary",
+          "months": null,
+          "weekdays": null,
+          "zone_he": "גבול מצרים — דרום-מערב",
+          "note_he": "לא להמשיך דרומה-מערבה.",
+          "source_url": null,
+          "verified": false
+        }
       ],
       "hazards": [
-        { "code": "border", "severity": "high", "note_he": "גבולות בינלאומיים משני הצדדים. חצייה היא בעיה ביטחונית, לא ספורטיבית." },
-        { "code": "offshore_normal", "severity": "high", "note_he": "הרוח דוחפת אותך מהחוף. בלי יכולת חתירה נגד הרוח — לא נכנסים." }
+        {
+          "code": "border",
+          "severity": "high",
+          "note_he": "גבולות בינלאומיים משני הצדדים. חצייה היא בעיה ביטחונית, לא ספורטיבית."
+        },
+        {
+          "code": "offshore_normal",
+          "severity": "high",
+          "note_he": "הרוח דוחפת אותך מהחוף. בלי יכולת חתירה נגד הרוח — לא נכנסים."
+        }
       ],
-      "marine": { "available": false, "provider": null, "lat": null, "lon": null, "confidence": "none",
-                  "note_he": "אין נתוני גובה גל למפרץ אילת באף מודל שנבדק. לא מוצג — ולא מומצא." },
-      "live_stations": { "ims": null, "isramar": null, "meteotech": "eilat_iui", "distance_km": 3.0, "representative": true },
-      "models": { "force": ["gfs_seamless", "ecmwf_ifs025"], "exclude": ["icon_seamless"],
-                  "reason_he": "אילת יושבת על הקצה הדרומי של דומיין ICON-EU. המודל לא אמין כאן." },
+      "marine": {
+        "available": false,
+        "provider": null,
+        "lat": null,
+        "lon": null,
+        "confidence": "none",
+        "note_he": "אין נתוני גובה גל למפרץ אילת באף מודל שנבדק. לא מוצג — ולא מומצא."
+      },
+      "live_stations": {
+        "ims": null,
+        "isramar": null,
+        "meteotech": "eilat_iui",
+        "distance_km": 3,
+        "representative": true
+      },
+      "models": {
+        "force": [
+          "gfs_seamless",
+          "ecmwf_ifs025"
+        ],
+        "exclude": [
+          "icon_seamless"
+        ],
+        "reason_he": "אילת יושבת על הקצה הדרומי של דומיין ICON-EU. המודל לא אמין כאן."
+      },
       "sub_spots": [
-        { "id": "reef-raf", "name_he": "ריף ראף", "shore_normal_deg": 100, "note_he": "אותה צפונית מגיעה כאן כרוח צד. שמורת אלמוגים 250 מטר דרומה — אסור." }
+        {
+          "id": "reef-raf",
+          "name_he": "ריף ראף",
+          "shore_normal_deg": 100,
+          "note_he": "אותה צפונית מגיעה כאן כרוח צד. שמורת אלמוגים 250 מטר דרומה — אסור."
+        }
       ],
       "skill_floor": "advanced",
       "source": "core",
       "notes_he": "תחנת השירות המטאורולוגי באילת מצהירה על אנמומטר ומחזירה ריק. המדידה החיה מגיעה מתחנת IUI.",
-      "_verify": ["legal[0]", "legal[1]"]
+      "_verify": [
+        "legal[0]",
+        "legal[1]"
+      ]
     }
   ]
 }

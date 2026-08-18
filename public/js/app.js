@@ -7,10 +7,14 @@ import { state, savePrefs, ageMin, withFallback } from './store.js';
 import { fetchAllSpots } from './sources/openmeteo.js';
 import { scoreSpot } from './verdict/engine.js';
 import { israelDateParts } from './verdict/calendar.js';
-import { renderCard, renderDetail, LEVEL_META, esc } from './ui/card.js';
+import { renderCard, renderDetail, LEVEL_META, REGION_HE, esc } from './ui/card.js';
+import { speedScore, kiteSize } from './verdict/bands.js';
 
 const $ = s => document.querySelector(s);
 const LEVEL_RANK = { green: 0, yellow: 1, red: 2, blocked: 3, unknown: 4 };
+
+/** סדר גאוגרפי קבוע — צפון לדרום, ואז הגופים הנפרדים. */
+const REGION_ORDER = ['north', 'center', 'south', 'kinneret', 'eilat'];
 
 /* ---------------- אתחול ---------------- */
 
@@ -87,10 +91,39 @@ function render() {
     return (b.v.score ?? -1) - (a.v.score ?? -1);
   });
 
-  host.innerHTML = scored.map(({ spot, v, grid, hours, nowHour }) => {
+  renderRegions(scored);
+
+  const shown = state.region === 'all'
+    ? scored
+    : scored.filter(x => x.spot.region === state.region);
+
+  const one = ({ spot, v, grid, hours, nowHour }) => {
     const open = state.expanded === spot.id;
     return renderCard(spot, v, { hours, nowHour }) + (open ? renderDetail(spot, v, { grid }) : '');
-  }).join('');
+  };
+
+  host.classList.toggle('grouped', state.region === 'all');
+
+  if (state.region === 'all') {
+    // מקובצים בסדר גאוגרפי — כותרת אזור דביקה בזמן גלילה.
+    // הסדר לא משתנה לפי מזג האוויר: מפה קבועה נלמדת פעם אחת,
+    // ורצועת הצ'יפים היא זו שנושאת את "מי הכי טוב היום".
+    host.innerHTML = REGION_ORDER
+      .map(r => {
+        const grp = shown.filter(x => x.spot.region === r);
+        if (!grp.length) return '';
+        const best = grp[0].v.level;
+        return `<h2 class="reg-head lv-${best}">
+                  <span class="reg-dot"></span>${esc(REGION_HE[r] || r)}
+                  <span class="reg-count num">${grp.length}</span>
+                </h2>` + grp.map(one).join('');
+      })
+      .join('');
+  } else {
+    host.innerHTML = shown.length
+      ? shown.map(one).join('')
+      : '<div class="empty">אין ספוטים באזור הזה עדיין.</div>';
+  }
 
   if (state.expanded) {
     host.querySelector(`[data-spot="${CSS.escape(state.expanded)}"]`)?.setAttribute('aria-expanded', 'true');
@@ -98,6 +131,36 @@ function render() {
 
   updateStatus(scored);
   updateSummary(scored);
+}
+
+/**
+ * רצועת האזורים. כל צ'יפ נושא נקודה בצבע פסק הדין הטוב ביותר באזור —
+ * כדי שאפשר יהיה לראות "בצפון יש רוח" בלי להיכנס לצפון.
+ */
+function renderRegions(scored) {
+  const host = $('#regions');
+  if (!host) return;
+
+  const groups = REGION_ORDER
+    .map(r => ({ r, items: scored.filter(x => x.spot.region === r) }))
+    .filter(g => g.items.length);
+
+  const greenAll = scored.filter(x => x.v.level === 'green').length;
+
+  const chip = (key, label, level, count) =>
+    `<button class="reg-chip lv-${level}${state.region === key ? ' on' : ''}" data-region="${esc(key)}">
+       <span class="reg-dot"></span>${esc(label)}
+       ${count ? `<span class="reg-badge num">${count}</span>` : ''}
+     </button>`;
+
+  const allBest = scored.length
+    ? scored.reduce((a, b) => (LEVEL_RANK[b.v.level] < LEVEL_RANK[a.v.level] ? b : a)).v.level
+    : 'unknown';
+
+  host.innerHTML =
+    chip('all', 'הכל', allBest, greenAll) +
+    groups.map(g => chip(g.r, REGION_HE[g.r] || g.r, g.items[0].v.level,
+                         g.items.filter(x => x.v.level === 'green').length)).join('');
 }
 
 function updateStatus(scored) {
@@ -184,6 +247,19 @@ function bindUI() {
     render();
   });
 
+  $('#regions').addEventListener('click', e => {
+    const b = e.target.closest('[data-region]');
+    if (!b) return;
+    state.region = b.dataset.region;
+    state.expanded = null;
+    render();
+    document.querySelector('.cards')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+
+  const sheet = $('#sheet');
+  $('#settings').addEventListener('click', () => sheet.showModal());
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.close(); });
+
   $('#theme').addEventListener('click', () => {
     const cur = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = cur;
@@ -201,9 +277,20 @@ function bindUI() {
 
   const weight = $('#weight');
   weight.value = state.prefs.weightKg;
-  $('#weight-val').textContent = state.prefs.weightKg;
-  weight.addEventListener('input', () => {
+  const applyWeight = () => {
     $('#weight-val').textContent = weight.value;
+    // מראים את האפקט במקום להסביר אותו: אותה רוח, שני משקלים.
+    const kg = +weight.value;
+    const REF = 18;
+    const size = kiteSize(REF, { weightKg: kg });
+    const minKt = Math.round(12 + ((kg - 75) / 15) * 3);
+    $('#weight-effect').innerHTML =
+      `במשקל הזה: מינימום לגלישה בערך <span dir="ltr">${minKt}</span> קשר, ` +
+      `ובתנאי <span dir="ltr">${REF}</span> קשר עפיפון <span dir="ltr">${size || '—'}</span> מטר.`;
+  };
+  applyWeight();
+  weight.addEventListener('input', () => {
+    applyWeight();
     savePrefs({ weightKg: +weight.value });
     render();
   });
