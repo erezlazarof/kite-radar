@@ -7,7 +7,7 @@
    2. כל טווח מספרי עטוף ב-dir="ltr" — אחרת "12–18" מתהפך בתוך טקסט עברי.
    ========================================================================= */
 
-import { compassHe, DIR_CLASS_HE, speedBandLabel, kiteSize } from './bands.js';
+import { compassHe, DIR_CLASS_HE, speedBandLabel } from './bands.js';
 
 /** מספר בודד — לא צריך עטיפה, ספרה יחידה בעברית לא מתהפכת */
 export const n = v => (v == null ? '—' : String(Math.round(v)));
@@ -107,9 +107,6 @@ export function buildDetail(v, spot) {
   if (w.hoursRideable > 0) {
     out.push(`חלון של ${n(w.hoursRideable)} שעות מעל סף הגלישה.`);
   }
-
-  const ks = kiteSize(w.meanKt, v.prefs);
-  if (ks && v.level !== 'red') out.push(`עפיפון בערך <span dir="ltr">${ks}</span> מטר.`);
 
   if (v.dirNote) out.push(v.dirNote);
 

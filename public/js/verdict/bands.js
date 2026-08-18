@@ -80,12 +80,17 @@ export function directionClass(windFromDeg, spot) {
 
 /**
  * ניקוד מהירות. 0..100.
- * גולש כבד יותר צריך יותר רוח → כל גבולות הרצועות זזים למעלה.
+ *
+ * ⚠️ אובייקטיבי במכוון — **בלי משקל הגולש ובלי שום העדפה אישית.**
+ * פסק דין הוא קביעה על החוף: 18 קשר צד-חוף הם 18 קשר צד-חוף לכל אחד.
+ * מה שאישי הוא איזה ציוד לוקחים, וזה חי בשכבת התכנון (kiteSize/quiver)
+ * ולא כאן. ערבוב השניים היה גורם לשני אנשים לראות צבע שונה לאותו חוף
+ * באותה שעה — ואז אי אפשר להגיד "יש רוח בבת ים" ולסמוך על זה.
+ *
  * מעל 28 קשר הקנס ריבועי, כי כוח העפיפון גדל בריבוע המהירות.
  */
-export function speedScore(meanKt, prefs = {}) {
-  const shift = (((prefs.weightKg ?? 75) - 75) / 15) * 3;
-  const v = meanKt - shift; // "קשרים אפקטיביים" ביחס לגולש ייחוס של 75 ק"ג
+export function speedScore(meanKt) {
+  const v = meanKt;
   if (v < 8) return 0;
   if (v < 12) return lerp(v, 8, 12, 15, 35);
   if (v < 15) return lerp(v, 12, 15, 40, 60);
@@ -109,17 +114,76 @@ export function speedBandLabel(meanKt) {
   return 'מסוכן';
 }
 
-/** גודל עפיפון מומלץ בגסות, לגולש 75 ק"ג */
-export function kiteSize(meanKt, prefs = {}) {
-  const shift = (((prefs.weightKg ?? 75) - 75) / 15) * 3;
-  const v = meanKt - shift;
-  if (v < 10) return null;
-  if (v < 13) return '15-17';
-  if (v < 16) return '12-14';
-  if (v < 20) return '10-12';
-  if (v < 24) return '8-9';
-  if (v < 30) return '6-7';
-  return '5';
+/* =========================================================================
+   שכבת התכנון — אישית, ולא נוגעת בפסק הדין
+   -------------------------------------------------------------------------
+   כאן, ורק כאן, המשקל משנה. הפלט הוא "מה לקחת", לא "אם ללכת".
+   ========================================================================= */
+
+/** גדלי עפיפון נפוצים */
+export const KITE_SIZES = [5, 6, 7, 8, 9, 10, 12, 14, 17];
+
+/** מתחת לזה לא ממליצים ציוד — אין על מה לרכוב */
+export const MIN_RIDEABLE_MARGINAL_KT = 11;
+
+/**
+ * גודל עפיפון מומלץ במטרים.
+ *
+ * שטח נדרש משתנה הפוך לריבוע המהירות ובאופן ישר במסת הגולש:
+ *   A ∝ m / v²
+ * מכויל כך שגולש 75 ק"ג ב-18 קשר יוצא על כ-10 מ' — נקודת הייחוס
+ * המקובלת בטבלאות של יצרנים.
+ */
+export const KITE_MAX_M = 17;   // הגדול ביותר שמישהו באמת מחזיק
+export const KITE_MIN_M = 5;
+
+export function kiteSizeM(meanKt, weightKg = 75) {
+  const v = Number(meanKt);
+  // מתחת לסף הרכיבוּת אין המלצת ציוד. "עפיפון 21 מטר" הוא לא עצה,
+  // הוא מה שקורה כשמריצים נוסחה מחוץ לתחום שבו היא נכונה.
+  if (!Number.isFinite(v) || v < MIN_RIDEABLE_MARGINAL_KT) return null;
+  const m = Number(weightKg) || 75;
+  const size = 10 * (m / 75) * (18 / Math.min(v, 40)) ** 2;
+  return Math.round(Math.max(3, Math.min(21, size)) * 10) / 10;
+}
+
+/** טווח מעשי סביב ההמלצה — אף אחד לא רוכב על מספר בודד */
+export function kiteRange(meanKt, weightKg = 75) {
+  const c = kiteSizeM(meanKt, weightKg);
+  if (c == null) return null;
+  // מהדקים את המרכז לתחום הגדלים שקיימים בשוק *לפני* שגוזרים טווח,
+  // אחרת ההידוק של כל קצה בנפרד יכול להפוך את הסדר (18–17).
+  const cl = Math.min(KITE_MAX_M, Math.max(KITE_MIN_M, c));
+  const lo = Math.max(KITE_MIN_M, Math.round(cl * 0.85));
+  const hi = Math.min(KITE_MAX_M, Math.round(cl * 1.15));
+  return {
+    center: c,
+    lo: Math.min(lo, hi),
+    hi: Math.max(lo, hi),
+    // הנוסחה יצאה מחוץ לגדלים שקיימים בשוק — עובדה שכדאי לומר
+    overMax: c > KITE_MAX_M,
+    underMin: c < KITE_MIN_M,
+  };
+}
+
+/**
+ * התאמת המלצה לעפיפונים שיש לגולש בפועל.
+ * מחזיר את הקרוב ביותר, ומסמן אם הוא בכלל בטווח סביר.
+ */
+export function matchQuiver(meanKt, weightKg, quiver = []) {
+  const c = kiteSizeM(meanKt, weightKg);
+  if (c == null) return { recommended: null, best: null, fits: false, reason: 'no_wind' };
+  const owned = (quiver || []).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+  if (!owned.length) return { recommended: c, best: null, fits: false, reason: 'no_quiver' };
+
+  const best = owned.reduce((a, b) => (Math.abs(b - c) < Math.abs(a - c) ? b : a));
+  const ratio = best / c;
+  // ±25% הוא הטווח שבו עפיפון עדיין רכיב, גם אם לא אידיאלי
+  const fits = ratio >= 0.75 && ratio <= 1.25;
+  return {
+    recommended: c, best, fits,
+    reason: fits ? 'ok' : best < c ? 'too_small' : 'too_big',
+  };
 }
 
 /**

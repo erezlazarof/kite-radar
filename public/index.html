@@ -97,6 +97,11 @@
   </form>
 
   <div class="sheet-body">
+    <p class="sheet-note">
+      ההגדרות כאן משנות <b>מה לקחת</b>, לא <b>אם ללכת</b>.
+      פסק הדין על כל חוף נשאר אותו פסק דין לכולם.
+    </p>
+
     <div class="setting">
       <div class="setting-head">
         <label class="setting-title" for="weight">המשקל שלך</label>
@@ -104,12 +109,24 @@
       </div>
       <input id="weight" type="range" min="45" max="120" step="1" value="75" aria-describedby="weight-why">
       <p id="weight-why" class="setting-why">
-        גולש כבד יותר צריך יותר רוח כדי לצאת על אותו עפיפון. המשקל מזיז את כל ספי
-        פסק הדין — בערך <span dir="ltr">3</span> קשר לכל <span dir="ltr">15</span> ק״ג —
-        וגם את גודל העפיפון המומלץ.
+        השטח שצריך גדל עם המשקל ויורד בריבוע מהירות הרוח. המשקל קובע רק את
+        גודל העפיפון המומלץ.
       </p>
-      <p id="weight-effect" class="setting-effect"></p>
     </div>
+
+    <div class="setting">
+      <div class="setting-head">
+        <span class="setting-title">העפיפונים שלך</span>
+        <button type="button" id="quiver-clear" class="setting-clear">נקה</button>
+      </div>
+      <div id="quiver" class="quiver" role="group" aria-label="גדלי עפיפון שברשותך"></div>
+      <p class="setting-why">
+        סמן מה יש לך בתיק, והאפליקציה תגיד לכל ספוט אם יש לך עפיפון שמתאים —
+        או שאין טעם לנסוע.
+      </p>
+    </div>
+
+    <p id="weight-effect" class="setting-effect"></p>
   </div>
 </dialog>
 

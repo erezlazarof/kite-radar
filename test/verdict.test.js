@@ -201,8 +201,39 @@ test('speedScore — מונוטוני עולה עד השיא ואז יורד', (
   assert.equal(speedScore(40), 0);
 });
 
-test('speedScore — גולש כבד צריך יותר רוח', () => {
-  assert.ok(speedScore(13, { weightKg: 95 }) < speedScore(13, { weightKg: 60 }));
+test('the verdict is objective — rider weight must NOT move it', () => {
+  // פסק דין הוא קביעה על החוף. אם שני אנשים רואים צבע שונה לאותו חוף
+  // באותה שעה, אי אפשר להגיד "יש רוח בבת ים" ולסמוך על זה.
+  assert.equal(speedScore(13), speedScore(13));
+  const light = scoreSpot(spot('bat-yam'), fc({ kt: 16, gust: 19, dir: 300 }), null, Date.UTC(2026, 10, 18, 9), { weightKg: 55 });
+  const heavy = scoreSpot(spot('bat-yam'), fc({ kt: 16, gust: 19, dir: 300 }), null, Date.UTC(2026, 10, 18, 9), { weightKg: 105 });
+  assert.equal(light.level, heavy.level);
+  assert.equal(light.score, heavy.score);
+});
+
+test('speedScore takes exactly one argument — no preference can leak in', () => {
+  assert.equal(speedScore.length, 1);
+  assert.equal(speedScore(18, { weightKg: 105 }), speedScore(18));
+});
+
+test('gear planning IS personal — the same wind gives a heavy rider a bigger kite', async () => {
+  const { kiteSizeM, kiteRange, matchQuiver } = await import('../public/js/verdict/bands.js');
+  assert.ok(kiteSizeM(18, 105) > kiteSizeM(18, 55), 'heavier rider needs more area');
+  assert.ok(kiteSizeM(24, 75) < kiteSizeM(14, 75), 'more wind needs less area');
+  const r = kiteRange(18, 75);
+  assert.ok(r.lo < r.center && r.center < r.hi);
+  // כיול: 75 ק"ג ב-18 קשר ≈ 10 מטר, נקודת הייחוס של טבלאות היצרנים
+  assert.ok(Math.abs(kiteSizeM(18, 75) - 10) < 0.6, `got ${kiteSizeM(18, 75)}`);
+});
+
+test('quiver matching flags when nothing you own fits', async () => {
+  const { matchQuiver } = await import('../public/js/verdict/bands.js');
+  assert.equal(matchQuiver(18, 75, [9, 10, 12]).fits, true);
+  const tooLight = matchQuiver(30, 75, [14, 17]);
+  assert.equal(tooLight.fits, false);
+  assert.equal(tooLight.reason, 'too_big');
+  assert.equal(matchQuiver(18, 75, []).reason, 'no_quiver');
+  assert.equal(matchQuiver(3, 75, [10]).reason, 'no_wind');
 });
 
 test('קנס יתר-כוח מואץ ולא לינארי', () => {
@@ -319,4 +350,27 @@ test('Latin words inside Hebrew get an explicit LTR wrapper', async () => {
   assert.ok(!/<(img|script)/i.test(injected), 'no raw tag survives');
   assert.match(injected, /&lt;/);
   assert.ok(!/&<span/.test(injected), 'entities must not be split by the LTR wrapper');
+});
+
+test('gear advice stops where the formula stops being true', async () => {
+  const { kiteSizeM, kiteRange, KITE_MAX_M } = await import('../public/js/verdict/bands.js');
+  assert.equal(kiteSizeM(9, 75), null, 'no gear advice below the rideable threshold');
+  assert.equal(kiteRange(9, 75), null);
+  const r = kiteRange(11.5, 105);
+  assert.ok(r.hi <= KITE_MAX_M, `range must stay inside sizes that exist, got ${r.hi}`);
+  assert.ok(r.lo <= r.hi);
+  const strong = kiteRange(34, 55);
+  assert.ok(strong.lo >= 5 && strong.hi >= strong.lo);
+});
+
+test('gear advice never appears on a no-go card', async () => {
+  const { renderDetail } = await import('../public/js/ui/card.js');
+  const prefs = { weightKg: 75, quiver: [7, 9, 12] };
+  // 22kt but blowing straight offshore -> red
+  const red = scoreSpot(spot('bat-yam'), fc({ kt: 22, gust: 26, dir: 90 }), null, Date.UTC(2026, 10, 18, 9), prefs);
+  assert.equal(red.level, 'red');
+  assert.ok(!renderDetail(spot('bat-yam'), red, { prefs }).includes('מה לקחת'),
+    'a red card must not offer gear advice — it reads as encouragement');
+  const green = scoreSpot(spot('bat-yam'), fc({ kt: 18, gust: 21, dir: 300 }), null, Date.UTC(2026, 10, 18, 9), prefs);
+  assert.ok(renderDetail(spot('bat-yam'), green, { prefs }).includes('מה לקחת'));
 });

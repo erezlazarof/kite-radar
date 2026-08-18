@@ -8,7 +8,7 @@ import { fetchAllSpots } from './sources/openmeteo.js';
 import { scoreSpot } from './verdict/engine.js';
 import { israelDateParts } from './verdict/calendar.js';
 import { renderCard, renderDetail, LEVEL_META, REGION_HE, esc } from './ui/card.js';
-import { speedScore, kiteSize } from './verdict/bands.js';
+import { kiteRange, KITE_SIZES } from './verdict/bands.js';
 
 const $ = s => document.querySelector(s);
 const LEVEL_RANK = { green: 0, yellow: 1, red: 2, blocked: 3, unknown: 4 };
@@ -99,7 +99,7 @@ function render() {
 
   const one = ({ spot, v, grid, hours, nowHour }) => {
     const open = state.expanded === spot.id;
-    return renderCard(spot, v, { hours, nowHour }) + (open ? renderDetail(spot, v, { grid }) : '');
+    return renderCard(spot, v, { hours, nowHour }) + (open ? renderDetail(spot, v, { grid, prefs: state.prefs }) : '');
   };
 
   host.classList.toggle('grouped', state.region === 'all');
@@ -277,20 +277,48 @@ function bindUI() {
 
   const weight = $('#weight');
   weight.value = state.prefs.weightKg;
-  const applyWeight = () => {
+
+  // מראים את האפקט במקום להסביר אותו: שלוש רוחות, גודל לכל אחת.
+  const REF_KT = [14, 18, 24];
+  const applyPrefs = () => {
     $('#weight-val').textContent = weight.value;
-    // מראים את האפקט במקום להסביר אותו: אותה רוח, שני משקלים.
     const kg = +weight.value;
-    const REF = 18;
-    const size = kiteSize(REF, { weightKg: kg });
-    const minKt = Math.round(12 + ((kg - 75) / 15) * 3);
-    $('#weight-effect').innerHTML =
-      `במשקל הזה: מינימום לגלישה בערך <span dir="ltr">${minKt}</span> קשר, ` +
-      `ובתנאי <span dir="ltr">${REF}</span> קשר עפיפון <span dir="ltr">${size || '—'}</span> מטר.`;
+    const parts = REF_KT.map(kt => {
+      const r = kiteRange(kt, kg);
+      return `<span dir="ltr">${kt}</span> קשר → <b><span dir="ltr">${r.lo}–${r.hi}</span></b> מ׳`;
+    });
+    $('#weight-effect').innerHTML = parts.join(' · ');
+    renderQuiver();
   };
-  applyWeight();
+
+  function renderQuiver() {
+    const owned = new Set(state.prefs.quiver || []);
+    $('#quiver').innerHTML = KITE_SIZES
+      .map(sz => `<button type="button" class="q-chip${owned.has(sz) ? ' on' : ''}" data-size="${sz}"
+                    aria-pressed="${owned.has(sz)}"><span dir="ltr">${sz}</span></button>`)
+      .join('');
+  }
+
+  $('#quiver').addEventListener('click', e => {
+    const b = e.target.closest('[data-size]');
+    if (!b) return;
+    const sz = +b.dataset.size;
+    const cur = new Set(state.prefs.quiver || []);
+    cur.has(sz) ? cur.delete(sz) : cur.add(sz);
+    savePrefs({ quiver: [...cur].sort((a, z) => a - z) });
+    renderQuiver();
+    render();
+  });
+
+  $('#quiver-clear').addEventListener('click', () => {
+    savePrefs({ quiver: [] });
+    renderQuiver();
+    render();
+  });
+
+  applyPrefs();
   weight.addEventListener('input', () => {
-    applyWeight();
+    applyPrefs();
     savePrefs({ weightKg: +weight.value });
     render();
   });

@@ -5,7 +5,7 @@
    חוק ויזואלי שני: אפור (unknown) נראה אחרת מאדום ומ-blocked.
    ========================================================================= */
 
-import { compassHe, DIR_CLASS_HE } from '../verdict/bands.js';
+import { compassHe, DIR_CLASS_HE, matchQuiver, kiteRange } from '../verdict/bands.js';
 import { FLAG_HE, n } from '../verdict/phrases.he.js';
 import { renderSparklineSVG } from './sparkline.js';
 import { renderCompass } from './compass.js';
@@ -153,6 +153,38 @@ export function renderDetail(spot, v, extra = {}) {
 
   if (extra.grid) {
     rows.push(`<p class="d-src">התחזית היא לנקודת רשת במרחק <span dir="ltr">${extra.grid.distanceKm.toFixed(1)}</span> ק"מ מהחוף, ברזולוציה של כ-7 ק"מ.</p>`);
+  }
+
+  // ----- שכבת התכנון. מופרדת במכוון: היא אישית, והיא לא חלק מפסק הדין -----
+  const kt = v.window?.meanKt;
+  // רק ירוק וצהוב. "לא ללכת" ואחריו "מהעפיפונים שלך: 7 מטר" הוא מסר
+  // מעורב, ומסר מעורב בהקשר בטיחותי נקרא כעידוד.
+  if (kt != null && (v.level === 'green' || v.level === 'yellow')) {
+    const prefs = extra.prefs || {};
+    const r = kiteRange(kt, prefs.weightKg);
+    const q = matchQuiver(kt, prefs.weightKg, prefs.quiver);
+    if (r) {
+      rows.push('<h3 class="d-h">מה לקחת</h3>');
+      const bits = [];
+      if (r.overMax) {
+        bits.push(`<p class="d-gear d-gear-no">רוח שולית — הגדול ביותר שיש לך ` +
+          `(<span dir="ltr">${r.lo}–${r.hi}</span> מ׳), או פויל.</p>`);
+      } else if (r.underMin) {
+        bits.push(`<p class="d-gear d-gear-no">מתחת לגדלים הרגילים — ` +
+          `<span dir="ltr">${r.lo}</span> מ׳ ומטה, למומחים בלבד.</p>`);
+      } else {
+        bits.push(
+          `<p class="d-gear">לפי <span dir="ltr">${Math.round(prefs.weightKg ?? 75)}</span> ק״ג: ` +
+          `עפיפון <b><span dir="ltr">${r.lo}–${r.hi}</span></b> מטר.</p>`);
+      }
+      if (q.best != null) {
+        bits.push(q.fits
+          ? `<p class="d-gear d-gear-ok">מהעפיפונים שלך: <b><span dir="ltr">${q.best}</span></b> מטר.</p>`
+          : `<p class="d-gear d-gear-no">אין לך עפיפון בגודל הזה. הקרוב ביותר הוא ` +
+            `<span dir="ltr">${q.best}</span> מטר, ${q.reason === 'too_small' ? 'קטן מדי' : 'גדול מדי'}.</p>`);
+      }
+      rows.push(bits.join(''));
+    }
   }
 
   if (spot.sub_spots?.length) {

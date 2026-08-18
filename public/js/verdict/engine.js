@@ -33,7 +33,9 @@ export const SPEED_GATE = { noGo: 40, marginal: 60 };
  * @param {object} forecast    { hours: [{tsMs, hour, dayIndex, speedKt, gustKt, dirDeg}], ageMin, models? }
  * @param {object|null} obs    מדידה חיה (שלב 4); null בשלב 1
  * @param {number} nowMs       הזמן — מוזרק, לא נקרא
- * @param {object} prefs       { weightKg }
+ * @param {object} prefs       העדפות אישיות. ⚠️ **אינן משפיעות על פסק הדין**
+ *                             ונשמרות רק כדי שהתצוגה תוכל לגזור מהן את
+ *                             שכבת התכנון (גודל עפיפון). ראה speedScore.
  * @param {number} day         0 = היום, 1 = מחר …
  */
 export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
@@ -73,7 +75,7 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
 
   /* ---- שלב 3: רכיבים ---- */
   const dir = directionClass(window.dirDeg, spot);
-  const speed = speedScore(window.meanKt, prefs);
+  const speed = speedScore(window.meanKt);
   const gust = gustScore(window.meanKt, window.gustKt, dir.cls);
 
   const flags = [...dir.flags];

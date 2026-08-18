@@ -24,8 +24,8 @@ export const state = {
 
 export function loadPrefs() {
   try {
-    return { weightKg: 75, ...JSON.parse(localStorage.getItem('kite.prefs') || '{}') };
-  } catch { return { weightKg: 75 }; }
+    return { weightKg: 75, quiver: [], ...JSON.parse(localStorage.getItem('kite.prefs') || '{}') };
+  } catch { return { weightKg: 75, quiver: [] }; }
 }
 
 export function savePrefs(p) {

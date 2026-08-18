@@ -65,7 +65,7 @@ host.innerHTML = CASES.map(([label, spot, hours, now, ageMin = 3]) => {
   const v = scoreSpot(spot, fc, null, now, { weightKg: 75 }, 0);
   return `<p class="gal-h">${label}</p>` +
          renderCard(spot, v, { hours, nowHour: 13.5 }) +
-         renderDetail(spot, v, { grid: { distanceKm: 4.2 } });
+         renderDetail(spot, v, { grid: { distanceKm: 4.2 }, prefs: { weightKg: 75, quiver: [7, 9, 12] } });
 }).join('');
 
 document.querySelector('#t').onclick = () => {
