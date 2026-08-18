@@ -7,6 +7,8 @@
 
 import { compassHe, DIR_CLASS_HE } from '../verdict/bands.js';
 import { FLAG_HE, n } from '../verdict/phrases.he.js';
+import { renderSparklineSVG } from './sparkline.js';
+import { renderCompass } from './compass.js';
 
 export const LEVEL_META = {
   green:   { cls: 'lv-green',   icon: '🟢', label: 'יש רוח' },
@@ -21,13 +23,41 @@ export function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+/**
+ * טקסט עברי שעשוי להכיל מילה לטינית או טווח מספרי.
+ *
+ * רצף לטיני בתוך פסקית עברית נשען על ה-bidi של הדפדפן, ושם הוא נשבר:
+ * סימני פיסוק ניטרליים סביבו נודדים לצד הלא נכון, ושתי מילים לטיניות
+ * שנפגשות מעבר לגבול פסוקית מתהפכות. עטיפה מפורשת מסלקת את התלות.
+ */
+export function heText(str) {
+  // סדר הפעולות קריטי: מזהים את הרצפים הלטיניים על המחרוזת הגולמית ורק
+  // אז מקודדים כל חלק בנפרד. הסדר ההפוך היה מוצא "lt" בתוך &lt; ושובר
+  // את הישויות שה-escape בדיוק יצר.
+  //
+  // נקודה נספרת כחלק מהרצף רק כשאחריה תו לטיני (ims.gov.il), ולא כשהיא
+  // נקודת סוף משפט — שם מקומה עם המשפט העברי, בצד שמאל.
+  const LATIN = /[A-Za-z][A-Za-z0-9]*(?:[._%+-][A-Za-z0-9]+)*/g;
+  const src = String(str ?? '');
+  let out = '', last = 0, m;
+  while ((m = LATIN.exec(src)) !== null) {
+    out += esc(src.slice(last, m.index)) + `<span dir="ltr">${esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(src.slice(last));
+}
+
 /** חץ כיוון. הקונבנציה: החץ מצביע לאן הרוח *הולכת*, כלומר dirFrom + 180. */
 function arrow(dirDeg) {
   if (dirDeg == null) return '';
   return `<span class="arrow" style="--rot:${(dirDeg + 180) % 360}deg" aria-hidden="true">↑</span>`;
 }
 
-export function renderCard(spot, v) {
+/**
+ * @param {object} extra  { hours, nowHour } — שעות היום המוצג וקו ה"עכשיו".
+ *                        אופציונלי: בלעדיו הכרטיס פשוט לא מצייר מטאוגרם.
+ */
+export function renderCard(spot, v, extra = {}) {
   const meta = LEVEL_META[v.level] || LEVEL_META.unknown;
   const w = v.window || {};
   const hasWind = w.meanKt != null;
@@ -36,7 +66,7 @@ export function renderCard(spot, v) {
   const flags = (v.flags || [])
     .map(f => FLAG_HE[f])
     .filter(f => f && f.severity === 'critical')
-    .map(f => `<span class="chip">${f.icon} ${esc(f.text)}</span>`)
+    .map(f => `<span class="chip chip-alert" title="${esc(f.text)}">${f.icon} ${esc(f.short || f.text)}</span>`)
     .join('');
 
   const skill = spot.skill_floor === 'advanced'
@@ -45,23 +75,52 @@ export function renderCard(spot, v) {
   return `
 <article class="card ${meta.cls}" data-spot="${esc(spot.id)}" tabindex="0" role="button"
          aria-expanded="false" aria-label="${esc(spot.name_he)} — ${esc(meta.label)}">
-  <div class="card-head">
-    <span class="dot" aria-hidden="true"></span>
-    <h2 class="spot-name">${esc(spot.name_he)}</h2>
-    <span class="region">${esc(REGION_HE[spot.region] || '')}</span>
-  </div>
+  <header class="card-head">
+    <div class="spot-id">
+      <h2 class="spot-name">${esc(spot.name_he)}</h2>
+      <span class="region">${esc(REGION_HE[spot.region] || '')}</span>
+    </div>
+    <span class="verdict-badge">${esc(meta.label)}</span>
+  </header>
 
   <div class="card-main">
     <div class="wind">
-      ${hasWind ? `<span class="kt num">${n(w.meanKt)}</span><span class="unit">קשר</span>` :
-                  `<span class="kt num muted">—</span>`}
-      ${hasWind && w.gustKt != null ? `<span class="gust num">משב ${n(w.gustKt)}</span>` : ''}
+      ${hasWind
+        ? `<span class="kt num">${n(w.meanKt)}</span>
+           <span class="wind-meta">
+             <span class="unit">קשר</span>
+             ${w.gustKt != null ? `<span class="gust num">משב ${n(w.gustKt)}</span>` : ''}
+           </span>`
+        : `<span class="kt num muted">—</span>`}
     </div>
+    ${w.startHour != null ? `
+    <div class="when">
+      <span class="when-range num" dir="ltr">${String(w.startHour).padStart(2, '0')}:00–${String(w.endHour).padStart(2, '0')}:00</span>
+      ${w.hoursRideable > 0
+        ? `<span class="when-hours">${n(w.hoursRideable)} שעות מעל הסף</span>`
+        : `<span class="when-hours">החלון הטוב ביותר</span>`}
+    </div>` : ''}
+    ${w.dirDeg != null ? `
     <div class="dir">
-      ${arrow(w.dirDeg)}
-      ${w.dirDeg != null ? `<span class="dir-txt">${esc(compassHe(w.dirDeg))}<br><small>${esc(DIR_CLASS_HE[v.dirCls] || '')}</small></span>` : ''}
-    </div>
+      ${renderCompass(w.dirDeg, spot, { dirClass: v.dirCls })}
+      <span class="dir-txt">
+        <span class="dir-name">${esc(compassHe(w.dirDeg))}</span>
+        ${DIR_CLASS_HE[v.dirCls]
+          ? `<span class="dir-shore" data-dircls="${esc(v.dirCls)}">${esc(DIR_CLASS_HE[v.dirCls])}</span>`
+          : ''}
+      </span>
+    </div>` : ''}
   </div>
+
+  ${hasWind && extra.hours?.length ? `
+  <div class="spark-wrap">
+    ${renderSparklineSVG(extra.hours, {
+      window: w,
+      nowHour: extra.nowHour ?? null,
+      dayStart: spot.daytime_window?.start ?? 6,
+      dayEnd: spot.daytime_window?.end ?? 21,
+    })}
+  </div>` : ''}
 
   <p class="headline">${v.reason.headline}</p>
   ${v.reason.detail[0] ? `<p class="detail">${v.reason.detail[0]}</p>` : ''}
@@ -87,10 +146,10 @@ export function renderDetail(spot, v, extra = {}) {
   if (v.reason.caveats.length) {
     rows.push('<h3 class="d-h">לשים לב</h3>');
     rows.push('<ul class="d-caveats">' +
-      v.reason.caveats.map(c => `<li>${esc(c)}</li>`).join('') + '</ul>');
+      v.reason.caveats.map(c => `<li>${heText(c)}</li>`).join('') + '</ul>');
   }
 
-  if (spot.notes_he) rows.push(`<p class="d-note">${esc(spot.notes_he)}</p>`);
+  if (spot.notes_he) rows.push(`<p class="d-note">${heText(spot.notes_he)}</p>`);
 
   if (extra.grid) {
     rows.push(`<p class="d-src">התחזית היא לנקודת רשת במרחק <span dir="ltr">${extra.grid.distanceKm.toFixed(1)}</span> ק"מ מהחוף, ברזולוציה של כ-7 ק"מ.</p>`);
@@ -99,7 +158,7 @@ export function renderDetail(spot, v, extra = {}) {
   if (spot.sub_spots?.length) {
     rows.push('<h3 class="d-h">חופים נוספים באזור</h3>');
     rows.push('<ul class="d-caveats">' + spot.sub_spots
-      .map(s => `<li><b>${esc(s.name_he)}</b> — ${esc(s.note_he || '')}</li>`).join('') + '</ul>');
+      .map(s => `<li><b>${heText(s.name_he)}</b> — ${heText(s.note_he || '')}</li>`).join('') + '</ul>');
   }
 
   return `<div class="detail-panel" data-detail="${esc(spot.id)}">${rows.join('')}</div>`;

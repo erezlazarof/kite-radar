@@ -6,6 +6,7 @@ import { FEATURES, REFRESH_MS, ATTRIBUTION, IMS_ATTRIBUTION, DISCLAIMER } from '
 import { state, savePrefs, ageMin, withFallback } from './store.js';
 import { fetchAllSpots } from './sources/openmeteo.js';
 import { scoreSpot } from './verdict/engine.js';
+import { israelDateParts } from './verdict/calendar.js';
 import { renderCard, renderDetail, LEVEL_META, esc } from './ui/card.js';
 
 const $ = s => document.querySelector(s);
@@ -63,10 +64,20 @@ function render() {
   const now = Date.now();
   const age = ageMin(fc.fetchedAt);
 
+  // קו ה"עכשיו" מצויר רק על היום עצמו — על מחר הוא היה שקר ויזואלי
+  const il = israelDateParts(now);
+  const nowHour = state.day === 0 ? il.hour + il.minute / 60 : null;
+
   const scored = state.spots.map(spot => {
     const f = fc.payload[spot.id];
     const forecast = f ? { ...f, ageMin: age } : null;
-    return { spot, v: scoreSpot(spot, forecast, null, now, state.prefs, state.day), grid: f?.grid };
+    return {
+      spot,
+      v: scoreSpot(spot, forecast, null, now, state.prefs, state.day),
+      grid: f?.grid,
+      hours: (f?.hours || []).filter(h => h.dayIndex === state.day),
+      nowHour,
+    };
   });
 
   // דירוג: הכי טוב היום למעלה. זה מה שהופך "כל החופים" לשימושי.
@@ -76,9 +87,9 @@ function render() {
     return (b.v.score ?? -1) - (a.v.score ?? -1);
   });
 
-  host.innerHTML = scored.map(({ spot, v, grid }) => {
+  host.innerHTML = scored.map(({ spot, v, grid, hours, nowHour }) => {
     const open = state.expanded === spot.id;
-    return renderCard(spot, v) + (open ? renderDetail(spot, v, { grid }) : '');
+    return renderCard(spot, v, { hours, nowHour }) + (open ? renderDetail(spot, v, { grid }) : '');
   }).join('');
 
   if (state.expanded) {
@@ -86,6 +97,7 @@ function render() {
   }
 
   updateStatus(scored);
+  updateSummary(scored);
 }
 
 function updateStatus(scored) {
@@ -102,6 +114,48 @@ function updateStatus(scored) {
 
   el.textContent = txt;
   el.className = 'status' + (fc.restored ? ' status-warn' : '');
+}
+
+/**
+ * רצועת התקציר. התשובה צריכה להגיע לפני שהמשתמש גולל —
+ * ולכן היא נוקבת בספוט הכי טוב בשמו, לא רק בספירה.
+ */
+const DAY_HE = ['היום', 'מחר', 'מחרתיים'];
+
+function updateSummary(scored) {
+  const head = $('#summary-headline');
+  const best = $('#summary-best');
+  if (!head) return;
+
+  const rideable = scored.filter(s => s.v.level === 'green' || s.v.level === 'yellow');
+  const green = scored.filter(s => s.v.level === 'green');
+  const unknown = scored.filter(s => s.v.level === 'unknown');
+  const day = DAY_HE[state.day] || '';
+
+  if (!scored.length || unknown.length === scored.length) {
+    head.textContent = 'אין נתונים כרגע';
+    best.textContent = '';
+    return;
+  }
+
+  const top = (green[0] || rideable[0] || null);
+
+  if (green.length) {
+    head.textContent = green.length === 1
+      ? `ספוט אחד עם רוח ${day}`
+      : `${green.length} ספוטים עם רוח ${day}`;
+  } else if (rideable.length) {
+    head.textContent = `${day} גבולי בכל הספוטים`;
+  } else {
+    head.textContent = `אין רוח ${day}`;
+  }
+
+  best.innerHTML = top
+    ? `הכי טוב: <b>${esc(top.spot.name_he)}</b> · <span class="num">${Math.round(top.v.window.meanKt)}</span> קשר` +
+      (top.v.window.startHour != null
+        ? ` <span dir="ltr">${String(top.v.window.startHour).padStart(2, '0')}:00</span>–<span dir="ltr">${String(top.v.window.endHour).padStart(2, '0')}:00</span>`
+        : '')
+    : '';
 }
 
 function renderFooter() {

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="he" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>רדאר קייט — גלריית מצבים</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  .gal-h { margin: 22px 2px 8px; font-size: 12px; font-weight: 800;
+           letter-spacing: .06em; color: var(--text-3); }
+  .gal-bar { display:flex; gap:8px; padding:10px 2px; position:sticky;
+             inset-block-start:0; background:var(--bg); z-index:5; }
+  .gal-bar button { padding:7px 14px; border:1px solid var(--border);
+                    border-radius:999px; background:var(--surface); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="gal-bar">
+    <button id="t">בהיר / כהה</button>
+    <button id="w">375 / 600</button>
+  </div>
+  <main id="cards" class="cards"></main>
+</div>
+
+<script type="module">
+import { renderCard, renderDetail } from '../js/ui/card.js';
+import { scoreSpot } from '../js/verdict/engine.js';
+
+if (location.search.includes('dark')) document.documentElement.dataset.theme = 'dark';
+
+const reg = await (await fetch('../data/spots.json')).json();
+const S = id => reg.spots.find(s => s.id === id);
+
+/** בונה יום סינתטי: פרופיל תרמי עם שיא בשעה peak */
+function day({ peak = 15, peakHour = 15, gustRatio = 1.25, dir = 290, holes = [] }) {
+  return Array.from({ length: 24 }, (_, h) => {
+    const kt = holes.includes(h) ? null
+      : Math.max(2, peak * Math.exp(-((h - peakHour) ** 2) / 26));
+    return { hour: h, dayIndex: 0, tsMs: null,
+             speedKt: kt, gustKt: kt == null ? null : kt * gustRatio, dirDeg: dir };
+  });
+}
+
+const NOW = Date.UTC(2026, 7, 18, 10);   // 18/8/2026, 13:00 שעון ישראל
+
+const CASES = [
+  ['ירוק — יום קלאסי', S('bat-yam'), day({ peak: 19, dir: 300 }), NOW],
+  ['ירוק — רוח חזקה', S('betzet'), day({ peak: 26, peakHour: 14, dir: 285 }), NOW],
+  ['צהוב — גבולי', S('shavei-tzion'), day({ peak: 14, dir: 280 }), NOW],
+  ['צהוב — משבים', S('bat-galim'), day({ peak: 18, gustRatio: 1.75, dir: 300 }), NOW],
+  ['אדום — רוח מהחוף החוצה', S('bat-yam'), day({ peak: 22, dir: 90 }), NOW],
+  ['אדום — אין רוח', S('achziv'), day({ peak: 7, dir: 280 }), NOW],
+  ['חריג מנוהל — אילת צפונית', S('eilat-north'), day({ peak: 20, peakHour: 16, dir: 5 }), NOW],
+  ['אסור — תל אביב ביולי', S('tel-aviv-geula'), day({ peak: 20, dir: 300 }), Date.UTC(2026, 6, 15, 10)],
+  ['מחוץ לעונה — כנרת בינואר', S('kinneret-diamond'), day({ peak: 20, dir: 270 }), Date.UTC(2026, 0, 15, 10)],
+  ['אין נתונים', S('bat-yam'), [], NOW],
+  ['נתון ישן', S('bat-yam'), day({ peak: 19, dir: 300 }), NOW, 120],
+  ['חורים בנתונים', S('betzet'), day({ peak: 18, dir: 290, holes: [10, 11, 16] }), NOW],
+];
+
+const host = document.querySelector('#cards');
+host.innerHTML = CASES.map(([label, spot, hours, now, ageMin = 3]) => {
+  const fc = { hours, ageMin };
+  const v = scoreSpot(spot, fc, null, now, { weightKg: 75 }, 0);
+  return `<p class="gal-h">${label}</p>` +
+         renderCard(spot, v, { hours, nowHour: 13.5 }) +
+         renderDetail(spot, v, { grid: { distanceKm: 4.2 } });
+}).join('');
+
+document.querySelector('#t').onclick = () => {
+  const r = document.documentElement;
+  r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark';
+};
+document.querySelector('#w').onclick = () => {
+  const a = document.querySelector('.app');
+  a.style.maxWidth = a.style.maxWidth === '375px' ? '620px' : '375px';
+};
+</script>
+</body>
+</html>

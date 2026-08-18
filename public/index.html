@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#edf2f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a141e" media="(prefers-color-scheme: dark)">
 <title>רדאר קייט — תחזית רוח לספוטים בישראל</title>
 <meta name="description" content="תחזית רוח וגלים חיה לספוטי הקייטסרפינג בישראל, עם פסק דין לכל חוף.">
 <link rel="stylesheet" href="styles.css">
@@ -13,12 +15,36 @@
 
   <header class="header">
     <div class="brand">
-      <h1>רדאר קייט</h1>
-      <span class="sub">ללכת לים?</span>
+      <svg class="brand-mark" viewBox="0 0 34 30" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="wm-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" style="stop-color:var(--accent)"/>
+            <stop offset="1" style="stop-color:var(--go)"/>
+          </linearGradient>
+        </defs>
+        <path class="bm-canopy" d="M3 13 C 9.5 3.8, 24.5 3.8, 31 13"/>
+        <path class="bm-lines" d="M6.5 14 L 16.2 26.6 M27.5 14 L 17.8 26.6"/>
+        <circle class="bm-rider" cx="17" cy="27.3" r="2.3"/>
+      </svg>
+      <span class="brand-text">
+        <strong class="brand-name">רדאר קייט</strong>
+        <span class="brand-tag">ללכת לים?</span>
+      </span>
     </div>
     <div id="status" class="status"></div>
-    <button id="theme" class="icon-btn" title="בהיר / כהה" aria-label="החלף ערכת צבעים">◐</button>
+    <button id="theme" class="icon-btn" title="בהיר / כהה" aria-label="החלף ערכת צבעים">
+      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M10 2.8 a 7.2 7.2 0 0 1 0 14.4 Z" fill="currentColor"/>
+      </svg>
+    </button>
   </header>
+
+  <section id="summary" class="summary" aria-label="תמונת היום">
+    <span class="summary-kicker">תמונת היום</span>
+    <p id="summary-headline" class="summary-headline"><span class="skeleton-line" aria-hidden="true"></span></p>
+    <p id="summary-best" class="summary-best"></p>
+  </section>
 
   <nav class="days" aria-label="בחירת יום">
     <button data-day="0" class="on">היום</button>
@@ -27,15 +53,36 @@
   </nav>
 
   <main id="cards" class="cards" aria-live="polite">
-    <div class="empty">טוען תחזית…</div>
+    <p class="sr-only">טוען תחזית…</p>
+    <div class="skeleton-card" aria-hidden="true">
+      <span class="skeleton-line w-45"></span>
+      <span class="skeleton-line skeleton-num w-30"></span>
+      <span class="skeleton-line skeleton-spark"></span>
+      <span class="skeleton-line w-85"></span>
+    </div>
+    <div class="skeleton-card" aria-hidden="true">
+      <span class="skeleton-line w-45"></span>
+      <span class="skeleton-line skeleton-num w-30"></span>
+      <span class="skeleton-line skeleton-spark"></span>
+      <span class="skeleton-line w-85"></span>
+    </div>
+    <div class="skeleton-card" aria-hidden="true">
+      <span class="skeleton-line w-45"></span>
+      <span class="skeleton-line skeleton-num w-30"></span>
+      <span class="skeleton-line skeleton-spark"></span>
+      <span class="skeleton-line w-85"></span>
+    </div>
   </main>
 
   <footer class="footer">
     <p id="disclaimer" class="disclaimer"></p>
-    <label class="weight">
-      משקל הגולש <output id="weight-val" class="num">75</output> ק״ג
-      <input id="weight" type="range" min="45" max="120" step="1" value="75">
-    </label>
+    <div class="weight-row">
+      <label class="weight" for="weight">
+        <span class="weight-label">משקל הגולש</span>
+        <span class="weight-value"><output id="weight-val" class="num">75</output> ק״ג</span>
+      </label>
+      <input id="weight" type="range" min="45" max="120" step="1" value="75" aria-label="משקל הגולש בקילוגרם">
+    </div>
     <p id="attribution" class="attribution"></p>
   </footer>
 

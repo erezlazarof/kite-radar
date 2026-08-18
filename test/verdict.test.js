@@ -308,3 +308,15 @@ test('speed gate — 17 knots side-onshore is green', () => {
   const v = scoreSpot(spot('bat-yam'), fc({ kt: 17, gust: 20, dir: 315 }), null, Date.UTC(2026, 10, 18, 9), {});
   assert.equal(v.level, 'green');
 });
+
+test('Latin words inside Hebrew get an explicit LTR wrapper', async () => {
+  const { heText } = await import('../public/js/ui/card.js');
+  const out = heText('המדידה מגיעה מתחנת IUI.');
+  assert.match(out, /<span dir="ltr">IUI<\/span>\./, 'the sentence-final period belongs to the Hebrew sentence, not to the Latin run');
+  assert.match(heText('מקור: ims.gov.il בלבד'), /<span dir="ltr">ims\.gov\.il<\/span>/, 'but a dot inside a domain stays inside');
+  // ההגנה נשמרת: תגית גולמית לא שורדת, והישויות שנוצרו לא נשברות
+  const injected = heText('<img src=x onerror=alert(1)>');
+  assert.ok(!/<(img|script)/i.test(injected), 'no raw tag survives');
+  assert.match(injected, /&lt;/);
+  assert.ok(!/&<span/.test(injected), 'entities must not be split by the LTR wrapper');
+});

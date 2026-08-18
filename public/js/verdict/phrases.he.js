@@ -26,15 +26,15 @@ export const hhmm = h => `<span dir="ltr">${String(h).padStart(2, '0')}:00</span
  * ולכן "המראה קשה", שהוא מצב הרוח הרגיל בים התיכון בקיץ, אינו צ'יפ.
  */
 export const FLAG_HE = {
-  offshore_danger: { icon: '⛔', text: 'הרוח דוחפת מהחוף החוצה', severity: 'critical' },
-  rescue:          { icon: '⛑', text: 'רוח צד-החוצה — לוודא חילוץ', severity: 'critical' },
-  rescue_boat:     { icon: '⛑', text: 'נדרשת סירת חילוץ בים', severity: 'critical' },
-  upwind_skill:    { icon: '↑',  text: 'חובה יכולת חתירה נגד הרוח', severity: 'critical' },
-  gusty:           { icon: '⚠', text: 'משבים לא יציבים', severity: 'critical' },
-  model_spread:    { icon: '≈', text: 'המודלים חלוקים ביניהם', severity: 'critical' },
-  stale:           { icon: '⏱', text: 'הנתון לא טרי', severity: 'critical' },
-  unverified_spot: { icon: '◎', text: 'ספוט לא אומת', severity: 'critical' },
-  skill_advanced:  { icon: '⚑', text: 'ספוט למתקדמים', severity: 'critical' },
+  offshore_danger: { icon: '⛔', short: 'רוח החוצה', text: 'הרוח דוחפת אותך מהחוף אל הים הפתוח.', severity: 'critical' },
+  rescue:          { icon: '⛑', short: 'לוודא חילוץ', text: 'רוח צד-החוצה — לוודא שיש מי שיאסוף אותך אם לא תחזור.', severity: 'critical' },
+  rescue_boat:     { icon: '⛑', short: 'סירת חילוץ', text: 'נדרשת סירת חילוץ פעילה בים.', severity: 'critical' },
+  upwind_skill:    { icon: '↑',  short: 'אפ-ווינד חובה', text: 'חובה יכולת חתירה נגד הרוח. בלעדיה לא נכנסים למים כאן.', severity: 'critical' },
+  gusty:           { icon: '⚠', short: 'משבים', text: 'הרוח לא יציבה — פערי משב גדולים.', severity: 'critical' },
+  model_spread:    { icon: '≈', short: 'מודלים חלוקים', text: 'מודלי התחזית חלוקים ביניהם.', severity: 'critical' },
+  stale:           { icon: '⏱', short: 'נתון ישן', text: 'הנתון לא טרי.', severity: 'critical' },
+  unverified_spot: { icon: '◎', short: 'לא אומת', text: 'ספוט שלא אומת.', severity: 'critical' },
+  skill_advanced:  { icon: '⚑', short: 'למתקדמים', text: 'ספוט למתקדמים בלבד.', severity: 'skip' },
   hard_launch:     { icon: '⚠', text: 'הרוח מגיעה ישר מהים — ההמראה והנחיתה קשות יותר, אבל היא גם מחזירה אותך לחוף.', severity: 'note' },
 };
 
@@ -120,6 +120,8 @@ export function buildDetail(v, spot) {
 export function buildCaveats(v, spot) {
   const out = [];
 
+  // רק דגלים שאינם צ'יפ על הכרטיס. הנוסח המלא של צ'יפ יושב ב-title שלו,
+  // ולכן חזרה עליו כאן הייתה הופכת את הרשימה למלאי במקום לקיורציה.
   for (const f of v.flags || []) {
     const meta = FLAG_HE[f];
     if (meta && meta.severity === 'note') out.push(meta.text);
@@ -149,5 +151,6 @@ export function buildCaveats(v, spot) {
   if ((spot._verify || []).length) {
     out.push('חלק מנתוני הספוט עדיין לאימות.');
   }
-  return out;
+  // ניכוי כפילויות — כמה מקורות יכולים לומר את אותו דבר
+  return [...new Set(out.filter(Boolean))];
 }
