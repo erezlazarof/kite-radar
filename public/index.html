@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="he" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>רדאר קייט — תחזית רוח לספוטים בישראל</title>
+<meta name="description" content="תחזית רוח וגלים חיה לספוטי הקייטסרפינג בישראל, עם פסק דין לכל חוף.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="brand">
+      <h1>רדאר קייט</h1>
+      <span class="sub">ללכת לים?</span>
+    </div>
+    <div id="status" class="status"></div>
+    <button id="theme" class="icon-btn" title="בהיר / כהה" aria-label="החלף ערכת צבעים">◐</button>
+  </header>
+
+  <nav class="days" aria-label="בחירת יום">
+    <button data-day="0" class="on">היום</button>
+    <button data-day="1">מחר</button>
+    <button data-day="2">מחרתיים</button>
+  </nav>
+
+  <main id="cards" class="cards" aria-live="polite">
+    <div class="empty">טוען תחזית…</div>
+  </main>
+
+  <footer class="footer">
+    <p id="disclaimer" class="disclaimer"></p>
+    <label class="weight">
+      משקל הגולש <output id="weight-val" class="num">75</output> ק״ג
+      <input id="weight" type="range" min="45" max="120" step="1" value="75">
+    </label>
+    <p id="attribution" class="attribution"></p>
+  </footer>
+
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
