@@ -15,10 +15,18 @@
 
 ## הרצה — 30 שניות
 
+**השרת כבר רץ** תחת pm2 בשם `kite-radar-dev` על פורט 3300, ומשרת את הריפו הראשי.
+הוא **לא** רץ בתוך סשן: סשן שמחזיק תהליך חי נראה כאילו הוא עדיין עובד, ותהליך יתום
+אחרי סגירת סשן תופס את הפורט וגורם ל-EADDRINUSE בסשן הבא. זה כבר קרה פעמיים.
+
 ```
-cd <repo>
-node dev-server.js
+pm2 list | Select-String kite       # מצב
+pm2 logs kite-radar-dev --lines 50  # לוגים
+pm2 restart kite-radar-dev          # אחרי שינוי בקוד השרת
 ```
+
+⛔ **לא להריץ `node dev-server.js` בתוך סשן.** אם אתה בענף אחר (worktree) והשרת של
+master לא מתאים — הרם משלך על פורט אחר: `PORT=3301 node dev-server.js`.
 
 <http://127.0.0.1:3300> — האתר, כולל `/api/obs` החי.
 `dev-server.js` מריץ את **הפונקציה האמיתית** מ-`functions/api/obs.js`, בלי wrangler ובלי פריסה. מה שנבדק כאן הוא מה שירוץ בענן.
