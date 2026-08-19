@@ -472,11 +472,23 @@ async function handleMessage(update, env, ctx) {
 async function handleCallback(update, env, ctx) {
   const cq = update.callback_query;
   const token = env.TG_BOT_TOKEN;
+  try {
+    await applyCallback(cq, env, ctx);
+  } finally {
+    // ⚠️ תמיד, גם אחרי כשל. בלי תשובה הכפתור נשאר עם חיווי טעינה
+    // מסתובב אצל המשתמש עד שהוא מוותר — וזה נראה כמו בוט שנתקע.
+    // המקרה השכיח: הקשה כפולה על אותו כפתור, שעליה טלגרם מחזירה
+    // "message is not modified" — מצב תקין לחלוטין מבחינת המשתמש.
+    try { await answerCallbackQuery(token, cq.id); } catch { /* אין מה לעשות */ }
+  }
+}
+
+async function applyCallback(cq, env, ctx) {
+  const token = env.TG_BOT_TOKEN;
   const chatId = cq.message?.chat?.id;
   const messageId = cq.message?.message_id;
   const data = String(cq.data || '');
-
-  if (chatId == null) { await answerCallbackQuery(token, cq.id); return; }
+  if (chatId == null) return;
 
   const nowMs = Date.now();
   const existed = await getSub(env, chatId);
@@ -487,7 +499,6 @@ async function handleCallback(update, env, ctx) {
     await putSub(env, sub);
     if (!existed) await addToIndex(env, chatId);
     await editMessageText(token, chatId, messageId, statusText(sub, new Map(spots.map(s => [s.id, s]))));
-    await answerCallbackQuery(token, cq.id, { text: 'נשמר' });
     return;
   }
 
@@ -495,12 +506,10 @@ async function handleCallback(update, env, ctx) {
   else if (data === CB_NONE) sub = { ...sub, spots: [] };
   else if (data.startsWith(CB_TOGGLE)) {
     const id = data.slice(CB_TOGGLE.length);
-    if (!spots.some(s => s.id === id)) { await answerCallbackQuery(token, cq.id); return; }
+    // מזהה שאינו ברג'יסטר — מקלדת ישנה אחרי שספוט ירד. מתעלמים.
+    if (!spots.some(s => s.id === id)) return;
     sub = toggleSpot(sub, id);
-  } else {
-    await answerCallbackQuery(token, cq.id);
-    return;
-  }
+  } else return;
 
   await putSub(env, sub);
   if (!existed) await addToIndex(env, chatId);
@@ -512,7 +521,6 @@ async function handleCallback(update, env, ctx) {
     `אילו חופים לעקוב אחריהם? נבחרו ${ltr(sub.spots.length)}.`,
     { reply_markup: spotsKeyboard(spots, sub.spots) },
   );
-  await answerCallbackQuery(token, cq.id);
 }
 
 export async function handleUpdate(update, env, ctx) {

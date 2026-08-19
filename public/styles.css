@@ -1096,3 +1096,7 @@ body.busy .status::after {
 body.offline .status { color: var(--warn-ink); font-weight: 700; }
 body.offline .m-dot { background: var(--text-3); box-shadow: none; animation: none; }
 body.offline .measured { opacity: .72; }
+
+/* יעד קישור עמוק מהתראת טלגרם — הכותרת הדביקה מסתירה את ראש הכרטיס
+   בלי המרווח הזה, וההתראה נוחתת על כרטיס חתוך. */
+.card { scroll-margin-block-start: 84px; }

@@ -97,7 +97,7 @@ export function renderCard(spot, v, extra = {}) {
     ? '<span class="chip chip-cand" title="לא נמצאה עדות שגולשים כאן בפועל. כיוון החוף נגזר ממפה.">◎ מועמד</span>' : '';
 
   return `
-<article class="card ${meta.cls}" data-spot="${esc(spot.id)}" tabindex="0" role="button"
+<article class="card ${meta.cls}" id="${esc(spot.id)}" data-spot="${esc(spot.id)}" tabindex="0" role="button"
          aria-expanded="false" aria-label="${esc(spot.name_he)} — ${esc(meta.label)}">
   <header class="card-head">
     <div class="spot-id">

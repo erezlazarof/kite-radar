@@ -533,3 +533,12 @@ test('the cache version is bumped whenever the shell list changes', () => {
   assert.match(sw, /const CACHE_V = 'kite-v\d+'/);
   assert.match(sw, /caches\.delete/, 'old caches must be purged on activate');
 });
+
+test('every card is a deep-link target — alerts link to a specific beach', async () => {
+  const { renderCard } = await import('../public/js/ui/card.js');
+  const s = REG.spots[0];
+  const v = scoreSpot(s, fc({ kt: 17, gust: 20, dir: s.shore_normal_deg + 30 }), null, Date.UTC(2026, 10, 18, 9), {});
+  const html = renderCard(s, v, {});
+  assert.match(html, new RegExp(`id="${s.id}"`),
+    'without an id the Telegram link lands on the top of the page, not the spot');
+});
