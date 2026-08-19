@@ -1080,3 +1080,19 @@ body.busy .status::after {
   font-size: 11.5px; line-height: 1.55; color: var(--text-3);
   text-align: start;
 }
+
+/* ============================ PWA ============================ */
+
+.update-bar {
+  display: block; inline-size: 100%;
+  margin-block: 10px 0; padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 10px;
+  background: var(--accent-soft); color: var(--accent-ink);
+  font-size: 13px; font-weight: 700; text-align: center;
+}
+
+/* אופליין: לא מסתירים נתון, מסמנים שהוא לא חי */
+body.offline .status { color: var(--warn-ink); font-weight: 700; }
+body.offline .m-dot { background: var(--text-3); box-shadow: none; animation: none; }
+body.offline .measured { opacity: .72; }

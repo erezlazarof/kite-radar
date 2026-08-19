@@ -504,3 +504,32 @@ test('Eilat north beach is no longer dressed up as a kite spot', () => {
   const v = scoreSpot(s, fc({ kt: 19, gust: 22, dir: 0 }), null, Date.UTC(2026, 7, 18, 13), {});
   assert.equal(v.level, 'blocked');
 });
+
+/* ===================== PWA — שער מבני ===================== */
+
+test('the service worker precaches every module the app imports', async () => {
+  const { readdirSync } = await import('node:fs');
+  const sw = readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
+  const listed = [...(/const SHELL_FILES = \[([\s\S]*?)\];/.exec(sw)?.[1] || '')
+    .matchAll(/'([^']+)'/g)].map(m => m[1]);
+
+  const found = [];
+  (function walk(dir, rel) {
+    for (const e of readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })) {
+      if (e.isDirectory()) { if (e.name !== 'dev') walk(`${dir}${e.name}/`, `${rel}${e.name}/`); }
+      else if (e.name.endsWith('.js')) found.push(`./${rel}${e.name}`);
+    }
+  })('../public/js/', 'js/');
+
+  const missing = found.filter(f => !listed.includes(f));
+  assert.deepEqual(missing, [],
+    'a module that is imported but not precached breaks the app offline, silently');
+});
+
+test('the cache version is bumped whenever the shell list changes', () => {
+  // שער רך: אם מישהו מוסיף קובץ בלי להגדיל CACHE_V, מותקנים ימשיכו
+  // להריץ קוד ישן אחרי push — תקלה שקשה מאוד לאבחן מרחוק.
+  const sw = readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
+  assert.match(sw, /const CACHE_V = 'kite-v\d+'/);
+  assert.match(sw, /caches\.delete/, 'old caches must be purged on activate');
+});

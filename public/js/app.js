@@ -235,7 +235,7 @@ function updateStatus(scored) {
   const good = scored ? scored.filter(s => s.v.level === 'green').length : 0;
 
   let txt = a < 1 ? 'עודכן עכשיו' : `עודכן לפני ${a} דק׳`;
-  if (fc.restored) txt = `אין חיבור — מוצג נתון שמור מלפני ${a} דק׳`;
+  if (fc.restored || !navigator.onLine) txt = `אין חיבור — מוצג נתון שמור מלפני ${a} דק׳`;
   if (scored) txt = `${good ? `${good} ספוטים עם רוח · ` : ''}${txt}`;
 
   // ניטור הפסקות בהזנה — התחייבות חוזית ברישיון השמ"ט, ולא קישוט.
@@ -244,7 +244,7 @@ function updateStatus(scored) {
   if (down.length) txt = `מדידה חיה לא זמינה · ${txt}`;
 
   el.textContent = txt;
-  el.className = 'status' + (fc.restored || down.length ? ' status-warn' : '');
+  el.className = 'status' + (fc.restored || down.length || !navigator.onLine ? ' status-warn' : '');
 }
 
 /**
@@ -455,4 +455,70 @@ function setBusy(b) {
   document.body.classList.toggle('busy', b);
 }
 
-boot();
+/* ---------------- PWA ---------------- */
+
+/**
+ * רישום ה-Service Worker.
+ *
+ * מתבצע אחרי הטעינה הראשונה במכוון: ההתקנה מושכת עשרים ומשהו קבצים,
+ * ואין סיבה שהיא תתחרה על הרשת עם התחזית שהמשתמש בא בשבילה.
+ *
+ * כשגרסה חדשה ממתינה, אנחנו לא מרעננים מתחת לידיים — מציגים שורה
+ * שאפשר ללחוץ עליה. רענון כפוי באמצע קריאה של תחזית הוא בדיוק
+ * מה שמרגיז באפליקציות מזג אוויר.
+ */
+function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol !== 'https:' && location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') return;
+
+  navigator.serviceWorker.register('sw.js', { scope: './' }).then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener('statechange', () => {
+        // controller קיים ⇒ זו החלפה של גרסה קיימת, לא התקנה ראשונה
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBar(sw);
+      });
+    });
+  }).catch(() => { /* דפדפן שלא מרשה SW — האפליקציה עובדת בלעדיו */ });
+
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return;
+    reloading = true;
+    location.reload();
+  });
+}
+
+function showUpdateBar(sw) {
+  if (document.querySelector('#update-bar')) return;
+  const bar = document.createElement('button');
+  bar.id = 'update-bar';
+  bar.className = 'update-bar';
+  bar.type = 'button';
+  bar.textContent = 'יש גרסה חדשה — לרענן';
+  bar.addEventListener('click', () => sw.postMessage('skip-waiting'));
+  document.querySelector('.app')?.prepend(bar);
+}
+
+/** מצב הרשת משפיע על מה שמותר להציג, ולכן הוא מצב של האפליקציה */
+function watchConnection() {
+  const sync = () => {
+    document.body.classList.toggle('offline', !navigator.onLine);
+    if (navigator.onLine) {
+      if (ageMin(state.forecast?.fetchedAt) > 15) refreshForecast();
+      if (ageMin(state.obs?.fetchedAt) > 5) refreshObs();
+    } else {
+      render();
+    }
+  };
+  addEventListener('online', sync);
+  addEventListener('offline', sync);
+  sync();
+}
+
+boot().then(() => {
+  watchConnection();
+  addEventListener('load', registerSW, { once: true });
+  if (document.readyState === 'complete') registerSW();
+});

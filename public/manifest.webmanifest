@@ -1,0 +1,19 @@
+{
+  "name": "רדאר קייט — ללכת לים?",
+  "short_name": "רדאר קייט",
+  "description": "תחזית רוח ומדידה חיה לספוטי הקייטסרפינג בישראל, עם פסק דין לכל חוף.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#edf2f6",
+  "theme_color": "#0d87b0",
+  "categories": ["weather", "sports", "travel"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
