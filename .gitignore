@@ -1,9 +1,21 @@
 node_modules/
 .wrangler/
+
+# ⛔ סודות. חוק ברזל 12: סודות רק ב-worker/ דרך wrangler secret, לעולם
+# לא בריפו. הריפו הזה ציבורי — שורה שנמחקת כאן היא דליפה.
 .dev.vars
 .env
 .env.*
+
 *.tmp
 *.tmp.*
 .DS_Store
 Thumbs.db
+
+# פלט מחקר וקבצי עבודה שנסחפים ב-git add -A.
+# ⚠️ קרה בפועל: hist.json — 115KB של נתוני צד שלישי — נכנס לקומיט
+# כשסוכן מחקר כתב אותו לשורש הריפו.
+hist.json
+_verify.html
+public/_verify.html
+public/dev/_verify.html

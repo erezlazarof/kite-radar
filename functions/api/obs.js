@@ -39,8 +39,10 @@ const SOURCES = {
     as: 'text',
   },
   eilat: {
-    // HTTP במכוון — זה מה שהמקור מגיש. הפונקציה היא הגשר ל-HTTPS.
-    url: 'http://www.meteo-tech.co.il/eilat-yam/eilat_en.asp',
+    // ⚠️ היה HTTP במכוון, בהנחה שזה מה שהמקור מגיש. נמדד 19/8/2026:
+    // השרת עונה גם ב-HTTPS, עם תעודה תקינה ואותו תוכן בדיוק. אין סיבה
+    // למשוך נתון בטיחותי בערוץ פתוח כשהמקור מציע ערוץ סגור.
+    url: 'https://www.meteo-tech.co.il/eilat-yam/eilat_en.asp',
     as: 'latin1',
   },
 };
