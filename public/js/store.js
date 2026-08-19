@@ -18,6 +18,7 @@ export const state = {
   day: 0,
   region: 'all',
   expanded: null,
+  chartCtx: null,     // { spotId, hours, opts } של הגרף הפתוח
   prefs: loadPrefs(),
   now: () => Date.now(),
 };

@@ -8,7 +8,10 @@ import { fetchAllSpots, fetchModels, modelsForSpot } from './sources/openmeteo.j
 import { fetchObs, obsForSpot, compareToForecast, obsAgeMin } from './sources/obs.js';
 import { scoreSpot } from './verdict/engine.js';
 import { israelDateParts } from './verdict/calendar.js';
-import { renderCard, renderDetail, LEVEL_META, REGION_HE, esc } from './ui/card.js';
+import { renderCard, renderDetail, chartOpts, LEVEL_META, REGION_HE, esc } from './ui/card.js';
+import { chartHitTest } from './ui/chart.js';
+import { pickWindow } from './verdict/engine.js';
+import { compassHe } from './verdict/bands.js';
 import { kiteRange, KITE_SIZES } from './verdict/bands.js';
 
 const $ = s => document.querySelector(s);
@@ -128,16 +131,27 @@ function render() {
     ? scored
     : scored.filter(x => x.spot.region === state.region);
 
+  state.chartCtx = null;
+
   const one = ({ spot, v, grid, hours, nowHour }) => {
     const open = state.expanded === spot.id;
-    const detail = open
-      ? renderDetail(spot, v, {
-          grid, prefs: state.prefs,
-          // undefined = אל תציג את המדור כלל; null = טוען; אובייקט = יש נתונים
-          models: FEATURES.models ? (state.models[spot.id]?.data ?? null) : undefined,
-        })
-      : '';
-    return renderCard(spot, v, { hours, nowHour }) + detail;
+    if (!open) return renderCard(spot, v, { hours, nowHour });
+
+    const extra = {
+      grid, prefs: state.prefs,
+      // הפאנל מקבל את כל 72 השעות, לא רק את היום הנבחר
+      allHours: fc.payload[spot.id]?.hours || [],
+      nowHour,
+      windows: windowsFor(spot, fc.payload[spot.id]),
+      // undefined = אל תציג את המדור כלל; null = טוען; אובייקט = יש נתונים
+      models: FEATURES.models ? (state.models[spot.id]?.data ?? null) : undefined,
+    };
+
+    // הסקראבר חייב לקבל בדיוק את הנתונים ואת ה-opts שבהם צויר הגרף,
+    // אחרת האצבע והציור מדברים על שני צירים שונים.
+    state.chartCtx = { spotId: spot.id, hours: extra.allHours, opts: chartOpts(spot, v, extra) };
+
+    return renderCard(spot, v, { hours, nowHour }) + renderDetail(spot, v, extra);
   };
 
   host.classList.toggle('grouped', state.region === 'all');
@@ -169,6 +183,17 @@ function render() {
 
   updateStatus(scored);
   updateSummary(scored);
+}
+
+/** החלון הנבחר לכל אחד משלושת הימים — כדי שהמטאוגרם יסמן את שלושתם */
+function windowsFor(spot, f) {
+  if (!f?.hours?.length) return [];
+  const out = [];
+  for (let d = 0; d < 3; d++) {
+    const w = pickWindow(spot, f, d, state.defaults);
+    if (w?.startHour != null) out.push({ dayIndex: d, startHour: w.startHour, endHour: w.endHour });
+  }
+  return out;
 }
 
 /**
@@ -316,6 +341,31 @@ function bindUI() {
     render();
     if (state.expanded) loadModels(state.expanded);
   });
+
+  // סקראבר: מגע אחד שמעדכן שורת קריאה. בלי pan, בלי zoom, בלי pinch —
+  // אלה מחוות שנלחמות בגלילת העמוד בטלפון.
+  const scrub = e => {
+    const svg = e.target.closest?.('.chart');
+    const ctx = state.chartCtx;
+    if (!svg || !ctx) return;
+    const read = svg.closest('.chart-wrap')?.querySelector('.chart-read');
+    if (!read) return;
+
+    const r = svg.getBoundingClientRect();
+    // frac נמדד מהקצה השמאלי; ההיפוך ל-RTL כבר קורה בתוך מיפוי הגרף,
+    // ואסור לעשות אותו פעמיים.
+    const frac = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const hit = chartHitTest(ctx.hours, ctx.opts, frac);
+    if (!hit) { read.textContent = ''; return; }
+
+    read.innerHTML =
+      `<b>${esc(DAY_HE[hit.dayIndex] || '')} <span dir="ltr">${String(hit.hour).padStart(2, '0')}:00</span></b>` +
+      ` · <span class="num">${Math.round(hit.speedKt)}</span> קשר` +
+      (hit.gustKt != null ? ` · משב <span class="num">${Math.round(hit.gustKt)}</span>` : '') +
+      (hit.dirDeg != null ? ` · ${esc(compassHe(hit.dirDeg))}` : '');
+  };
+  $('#cards').addEventListener('pointermove', scrub);
+  $('#cards').addEventListener('pointerdown', scrub);
 
   $('#regions').addEventListener('click', e => {
     const b = e.target.closest('[data-region]');

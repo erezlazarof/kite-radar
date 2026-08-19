@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="רדאר קייט">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#123449"/>
+      <stop offset="1" stop-color="#0a141e"/>
+    </linearGradient>
+    <linearGradient id="canopy" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#43cbec"/>
+      <stop offset="1" stop-color="#2fd693"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#sea)"/>
+
+  <!-- אופק: קו המים. הסמל הוא עפיפון מעל ים, לא עפיפון על ריק. -->
+  <path d="M0 372 C 96 356, 160 388, 256 376 C 352 364, 416 392, 512 378 L512 512 L0 512 Z"
+        fill="#0d2b38" opacity=".85"/>
+  <path d="M0 372 C 96 356, 160 388, 256 376 C 352 364, 416 392, 512 378"
+        fill="none" stroke="#43cbec" stroke-width="5" opacity=".45"/>
+
+  <!-- כיפת העפיפון -->
+  <path d="M64 214 C 152 76, 360 76, 448 214"
+        fill="none" stroke="url(#canopy)" stroke-width="46" stroke-linecap="round"/>
+
+  <!-- חוטים -->
+  <path d="M104 236 L 244 396 M408 236 L 268 396"
+        fill="none" stroke="#e9f1f6" stroke-width="12" stroke-linecap="round" opacity=".72"/>
+
+  <!-- הגולש -->
+  <circle cx="256" cy="404" r="30" fill="#2fd693"/>
+</svg>

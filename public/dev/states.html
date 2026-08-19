@@ -30,7 +30,17 @@ import { scoreSpot } from '../js/verdict/engine.js';
 if (location.search.includes('dark')) document.documentElement.dataset.theme = 'dark';
 
 const reg = await (await fetch('../data/spots.json')).json();
-const S = id => reg.spots.find(s => s.id === id);
+/**
+ * הרג'יסטר משתנה — ספוטים נגזמים ומזהים משתנים. הגלריה לא אמורה
+ * ליפול עם stack trace כשזה קורה; היא אמורה לומר מה חסר.
+ */
+const missing = [];
+const S = (id, fallbackRegion) => {
+  const hit = reg.spots.find(s => s.id === id);
+  if (hit) return hit;
+  missing.push(id);
+  return reg.spots.find(s => s.region === fallbackRegion) || reg.spots[0];
+};
 
 /** בונה יום סינתטי: פרופיל תרמי עם שיא בשעה peak */
 function day({ peak = 15, peakHour = 15, gustRatio = 1.25, dir = 290, holes = [] }) {
@@ -44,19 +54,34 @@ function day({ peak = 15, peakHour = 15, gustRatio = 1.25, dir = 290, holes = []
 
 const NOW = Date.UTC(2026, 7, 18, 10);   // 18/8/2026, 13:00 שעון ישראל
 
+/** משכפל יום סינתטי לשלושה, עם דעיכה — כדי שהמטאוגרם יראה מה שהוא יראה בפועל */
+function threeDays(day0) {
+  const out = [];
+  for (let d = 0; d < 3; d++) {
+    const k = [1, 0.78, 0.55][d];
+    for (const h of day0) {
+      out.push({ ...h, dayIndex: d,
+                 speedKt: h.speedKt == null ? null : +(h.speedKt * k).toFixed(1),
+                 gustKt: h.gustKt == null ? null : +(h.gustKt * k).toFixed(1),
+                 dirDeg: (h.dirDeg + d * 12) % 360 });
+    }
+  }
+  return out;
+}
+
 const CASES = [
-  ['ירוק — יום קלאסי', S('bat-yam'), day({ peak: 19, dir: 300 }), NOW],
-  ['ירוק — רוח חזקה', S('betzet'), day({ peak: 26, peakHour: 14, dir: 285 }), NOW],
-  ['צהוב — גבולי', S('shavei-tzion'), day({ peak: 14, dir: 280 }), NOW],
-  ['צהוב — משבים', S('bat-galim'), day({ peak: 18, gustRatio: 1.75, dir: 300 }), NOW],
-  ['אדום — רוח מהחוף החוצה', S('bat-yam'), day({ peak: 22, dir: 90 }), NOW],
-  ['אדום — אין רוח', S('achziv'), day({ peak: 7, dir: 280 }), NOW],
-  ['חריג מנוהל — אילת צפונית', S('eilat-north'), day({ peak: 20, peakHour: 16, dir: 5 }), NOW],
-  ['אסור — תל אביב ביולי', S('tel-aviv-geula'), day({ peak: 20, dir: 300 }), Date.UTC(2026, 6, 15, 10)],
-  ['מחוץ לעונה — כנרת בינואר', S('kinneret-diamond'), day({ peak: 20, dir: 270 }), Date.UTC(2026, 0, 15, 10)],
-  ['אין נתונים', S('bat-yam'), [], NOW],
-  ['נתון ישן', S('bat-yam'), day({ peak: 19, dir: 300 }), NOW, 120],
-  ['חורים בנתונים', S('betzet'), day({ peak: 18, dir: 290, holes: [10, 11, 16] }), NOW],
+  ['ירוק — יום קלאסי', S('bat-yam', 'center'), day({ peak: 19, dir: 300 }), NOW],
+  ['ירוק — רוח חזקה', S('betzet', 'north'), day({ peak: 26, peakHour: 14, dir: 285 }), NOW],
+  ['צהוב — גבולי', S('shavei-tzion', 'north'), day({ peak: 14, dir: 280 }), NOW],
+  ['צהוב — משבים', S('bat-galim', 'north'), day({ peak: 18, gustRatio: 1.75, dir: 300 }), NOW],
+  ['אדום — רוח מהחוף החוצה', S('bat-yam', 'center'), day({ peak: 22, dir: 90 }), NOW],
+  ['אדום — אין רוח', S('achziv', 'north'), day({ peak: 7, dir: 280 }), NOW],
+  ['חריג מנוהל — אילת צפונית', S('eilat-reef-raf', 'eilat'), day({ peak: 20, peakHour: 16, dir: 5 }), NOW],
+  ['אסור — תל אביב ביולי', S('tel-aviv', 'center'), day({ peak: 20, dir: 300 }), Date.UTC(2026, 6, 15, 10)],
+  ['מחוץ לעונה — כנרת בינואר', S('kinneret-diamond', 'kinneret'), day({ peak: 20, dir: 270 }), Date.UTC(2026, 0, 15, 10)],
+  ['אין נתונים', S('bat-yam', 'center'), [], NOW],
+  ['נתון ישן', S('bat-yam', 'center'), day({ peak: 19, dir: 300 }), NOW, 120],
+  ['חורים בנתונים', S('betzet', 'north'), day({ peak: 18, dir: 290, holes: [10, 11, 16] }), NOW],
 ];
 
 const host = document.querySelector('#cards');
@@ -65,8 +90,23 @@ host.innerHTML = CASES.map(([label, spot, hours, now, ageMin = 3]) => {
   const v = scoreSpot(spot, fc, null, now, { weightKg: 75 }, 0);
   return `<p class="gal-h">${label}</p>` +
          renderCard(spot, v, { hours, nowHour: 13.5 }) +
-         renderDetail(spot, v, { grid: { distanceKm: 4.2 }, prefs: { weightKg: 75, quiver: [7, 9, 12] } });
+         renderDetail(spot, v, {
+           grid: { distanceKm: 4.2 },
+           prefs: { weightKg: 75, quiver: [7, 9, 12] },
+           allHours: threeDays(hours),
+           nowHour: 13.5,
+           windows: v.window?.startHour != null
+             ? [{ dayIndex: 0, startHour: v.window.startHour, endHour: v.window.endHour }] : [],
+         });
 }).join('');
+
+if (missing.length) {
+  const p = document.createElement('p');
+  p.className = 'gal-h';
+  p.style.color = 'var(--no)';
+  p.textContent = 'ספוטים שלא נמצאו ברג׳יסטר והוחלפו בתחליף מאותו אזור: ' + [...new Set(missing)].join(' · ');
+  host.prepend(p);
+}
 
 document.querySelector('#t').onclick = () => {
   const r = document.documentElement;

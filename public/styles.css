@@ -73,6 +73,7 @@
   --shadow-1: 0 1px 2px rgb(14 34 51 / .07);
   --shadow-2: 0 4px 16px rgb(14 34 51 / .09);
 
+
   --radius:    12px;
   --radius-lg: 16px;
 
@@ -643,6 +644,45 @@ body.busy .status::after {
   border-end-end-radius: 0;
 }
 .detail-panel {
+  /* ⚠️ הטוקנים האלה מוצהרים כאן ולא ב-:root. ערך של custom property
+     נפתר באלמנט שבו הוא *מוצהר*, ולא באלמנט שבו הוא נצרך — ולכן
+     `--ch-line: var(--lv)` על :root היה נפתר מול --lv שאינו קיים שם,
+     והמטאוגרם היה מצויר בלבן במקום בצבע פסק הדין. */
+  /* מטאוגרם הפאנל — אותה שפה של המטאוגרם בכרטיס, בגודל אחר */
+  --ch-band-light:      transparent;
+  --ch-band-marginal:   color-mix(in srgb, var(--text-3) 7%, transparent);
+  --ch-band-ideal:      color-mix(in srgb, var(--go) 13%, transparent);
+  --ch-band-strong:     color-mix(in srgb, var(--marginal) 12%, transparent);
+  --ch-band-extreme:    color-mix(in srgb, var(--no) 14%, transparent);
+  --ch-night:           var(--surface-3);
+  --ch-night-opacity:   .6;
+  --ch-threshold:       var(--text-3);
+  --ch-threshold-opacity: .6;
+  --ch-window:          var(--lv);
+  --ch-window-opacity:  .14;
+  --ch-window-bar-width: 2;
+  --ch-area:            var(--lv);
+  --ch-area-opacity:    .18;
+  --ch-line:            var(--lv);
+  --ch-line-width:      2;
+  --ch-dot:             var(--lv);
+  --ch-over:            var(--no);
+  --ch-daysep:          var(--border-strong);
+  --ch-daysep-opacity:  .7;
+  --ch-daylabel:        var(--text-3);
+  --ch-daylabel-opacity: 1;
+  --ch-arrow:           var(--text-2);
+  --ch-arrow-opacity:   .55;
+  --ch-now:             var(--text-2);
+  --ch-now-opacity:     .75;
+  --ch-axis:            var(--border-strong);
+  --ch-axis-opacity:    .55;
+  --ch-ytick:           var(--text-3);
+  --ch-ytick-opacity:   1;
+  --ch-label:           var(--text-3);
+  --ch-label-opacity:   1;
+
+  border-inline-start: 5px solid var(--lv, var(--border-strong));
   position: relative; z-index: 0;
   margin-block-start: -12px;           /* מבטל את ה-gap של .cards */
   padding: 22px 16px 15px;
@@ -1034,3 +1074,9 @@ body.busy .status::after {
 .mstrip-sum.ms-split { color: var(--no-ink); }
 .mstrip-sum.ms-none  { color: var(--text-3); font-weight: 600; }
 .mstrip-note { margin: 5px 0 0; font-size: 11.5px; color: var(--text-3); line-height: 1.5; }
+.d-basis {
+  margin: 0; padding: 8px 10px;
+  border-radius: 8px; background: var(--surface-3);
+  font-size: 11.5px; line-height: 1.55; color: var(--text-3);
+  text-align: start;
+}

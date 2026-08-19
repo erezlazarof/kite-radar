@@ -147,9 +147,7 @@ export function buildCaveats(v, spot) {
   if (spot.source === 'user') {
     out.push('ספוט שהוספת בעצמך. הגיאומטריה לא נבדקה, ולכן אין דירוג ירוק.');
   }
-  if (spot.shore_normal_basis) {
-    out.push('כיוון החוף נגזר כך: ' + spot.shore_normal_basis);
-  }
+
   if (spot.marine?.confidence === 'estimate' && spot.marine.note_he) {
     out.push(spot.marine.note_he);
   }

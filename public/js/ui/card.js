@@ -10,6 +10,7 @@ import { FLAG_HE, n } from '../verdict/phrases.he.js';
 import { renderSparklineSVG } from './sparkline.js';
 import { renderCompass } from './compass.js';
 import { renderModelStrip, modelMeanKt } from './modelstrip.js';
+import { renderChart } from './chart.js';
 
 export const LEVEL_META = {
   green:   { cls: 'lv-green',   icon: '🟢', label: 'יש רוח' },
@@ -171,9 +172,31 @@ export const REGION_HE = {
   eilat: 'אילת',
 };
 
+/**
+ * מפרט המטאוגרם. מיוצא כי הסקראבר חייב להאכיל את chartHitTest
+ * *באותם* opts שבהם צויר הגרף — אחרת האצבע והציור מדברים על צירים שונים.
+ */
+export function chartOpts(spot, v, extra) {
+  return {
+    width: 340, height: 172, days: 3,
+    nowHour: extra.nowHour ?? null, nowDayIndex: 0,
+    windows: extra.windows || [],
+    level: v.level,
+    idPrefix: 'ch' + String(spot.id).replace(/[^A-Za-z0-9]/g, ''),
+  };
+}
+
 /** פאנל הפירוט שנפתח מתחת לכרטיס */
 export function renderDetail(spot, v, extra = {}) {
   const rows = [];
+
+  // המטאוגרם ראשון: מי שלחץ על כרטיס רוצה לראות *מתי*, לא לקרוא.
+  if (extra.allHours?.length) {
+    rows.push(`<div class="chart-wrap" data-chart="${esc(spot.id)}">
+      ${renderChart(extra.allHours, chartOpts(spot, v, extra))}
+      <div class="chart-read" data-read="${esc(spot.id)}" aria-live="polite"></div>
+    </div>`);
+  }
 
   for (const line of v.reason.detail.slice(1)) rows.push(`<p class="d-line">${line}</p>`);
 
@@ -184,6 +207,14 @@ export function renderDetail(spot, v, extra = {}) {
   }
 
   if (spot.notes_he) rows.push(`<p class="d-note">${heText(spot.notes_he)}</p>`);
+
+  // נימוק ניצב-החוף. הוא באנגלית וטכני, והוא המספר היחיד ברג'יסטר
+  // שטעות בו מסוכנת — ולכן הוא מוצג, אבל כבלוק LTR נפרד. משפט אנגלי
+  // שלם בתוך פסקה עברית מתפרק ומתהפך.
+  if (spot.shore_normal_basis) {
+    rows.push('<h3 class="d-h">איך נגזר כיוון החוף</h3>');
+    rows.push(`<p class="d-basis" dir="ltr" lang="en">${esc(spot.shore_normal_basis)}</p>`);
+  }
 
   if (extra.grid) {
     rows.push(`<p class="d-src">התחזית היא לנקודת רשת במרחק <span dir="ltr">${extra.grid.distanceKm.toFixed(1)}</span> ק"מ מהחוף, ברזולוציה של כ-7 ק"מ.</p>`);
@@ -245,5 +276,8 @@ export function renderDetail(spot, v, extra = {}) {
       .map(s => `<li><b>${heText(s.name_he)}</b> — ${heText(s.note_he || '')}</li>`).join('') + '</ul>');
   }
 
-  return `<div class="detail-panel" data-detail="${esc(spot.id)}">${rows.join('')}</div>`;
+  // הפאנל אינו צאצא של הכרטיס בעץ ה-DOM, ולכן --lv אינו יורש אליו.
+  // בלי מחלקת הדרגה כאן, המטאוגרם מצויר בצבע הטקסט במקום בצבע פסק הדין.
+  const meta = LEVEL_META[v.level] || LEVEL_META.unknown;
+  return `<div class="detail-panel ${meta.cls}" data-detail="${esc(spot.id)}">${rows.join('')}</div>`;
 }
