@@ -18,11 +18,32 @@ export const TTL_MIN = {
 /** גיל מרבי שאחריו נתון שמור נחשב מת ולא מוצג כלל */
 export const MAX_AGE_MIN = { forecast: 24 * 60, obs: 3 * 60 };
 
+/** resKm — רזולוציית הרשת **בישראל**. ICON-D2 ו-GFS-HRRR אינם מכסים אותנו. */
 export const MODELS = {
-  gfs_seamless:  { label: 'GFS',   short: 'G' },
-  ecmwf_ifs025:  { label: 'ECMWF', short: 'E' },
-  icon_seamless: { label: 'ICON',  short: 'I' },
+  gfs_seamless:  { label: 'GFS',   short: 'G', resKm: 13 },
+  ecmwf_ifs025:  { label: 'ECMWF', short: 'E', resKm: 25 },
+  icon_seamless: { label: 'ICON',  short: 'I', resKm: 7 },
 };
+
+/**
+ * לאיזה מודל `best_match` נפתר בישראל.
+ *
+ * ⚠️ נמדד בקריאה אמיתית (19/8/2026): ב-best_match ובקריאה נפרדת ל-ICON
+ * חוזרות **אותן שעות בדיוק** בתל אביב, בבצת, בכנרת ובאילת — כלומר
+ * Open-Meteo בוחר כאן ICON-EU, שהוא הרזולוציה הגבוהה ביותר שמכסה את
+ * המדינה (7 ק"מ מול 13 של GFS ו-25 של ECMWF).
+ *
+ * זה לא פרט טריוויה: הוא הופך את `models.exclude` ברג'יסטר מהצהרה על
+ * רצועת ההשוואה להצהרה על **המספר הגדול בכרטיס**. ראה headlineModelFor.
+ */
+export const BEST_MATCH_RESOLVES_TO = 'icon_seamless';
+
+/**
+ * המודל שמחליף את best_match בספוט שהרג'יסטר מחריג ממנו את הבחירה שלו.
+ * ECMWF ולא GFS: זה מודל הייחוס העולמי, והוא זה שמופיע ברצועת ההשוואה
+ * של כל ספוט בארץ — כך שהמספר בכרטיס וקו ההשוואה מדברים באותה שפה.
+ */
+export const HEADLINE_MODEL_FALLBACK = 'ecmwf_ifs025';
 
 export const FEATURES = {
   /** מדידה חיה מהשירות המטאורולוגי. ניתן לכיבוי בשורה אחת אם תנאי השימוש ישתנו. */
@@ -31,6 +52,15 @@ export const FEATURES = {
   models: true,
   telegram: false,     // שלב 7
 };
+
+/**
+ * הריפו שאליו נשלחות הצעות ספוט משכבה 3 של "הוסף ספוט".
+ *
+ * אומת מול api.github.com ב-19/8/2026: המשתמש erezlazarof קיים.
+ * הריפו עצמו נוצר בשלב ההעלאה לרשת — עד אז הכפתור נופל בחן להעתקה
+ * ללוח. owner=null מכבה את הקישור לגמרי.
+ */
+export const GITHUB = { owner: 'erezlazarof', repo: 'kite-radar' };
 
 export const REFRESH_MS = { obs: 5 * 60 * 1000, forecast: 15 * 60 * 1000 };
 
@@ -46,3 +76,11 @@ export const IMS_ATTRIBUTION =
 
 export const DISCLAIMER =
   'כלי תכנון בלבד. לבדוק תנאים בשטח לפני כניסה למים, ולא לגלוש לבד.';
+
+/** תיאור המודל שממנו נלקח המספר בכרטיס — label ורזולוציה, גם עבור best_match */
+export function modelInfo(id) {
+  const key = id === 'best_match' || id == null ? BEST_MATCH_RESOLVES_TO : id;
+  const m = MODELS[key];
+  return { id: key, label: m?.label || key, resKm: m?.resKm ?? null,
+           isDefault: id === 'best_match' || id == null };
+}

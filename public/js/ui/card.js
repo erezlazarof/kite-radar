@@ -11,6 +11,7 @@ import { renderSparklineSVG } from './sparkline.js';
 import { renderCompass } from './compass.js';
 import { renderModelStrip, modelMeanKt } from './modelstrip.js';
 import { renderChart } from './chart.js';
+import { modelInfo } from '../config.js';
 
 export const LEVEL_META = {
   green:   { cls: 'lv-green',   icon: '🟢', label: 'יש רוח' },
@@ -170,7 +171,29 @@ export const REGION_HE = {
   south: 'דרום',
   kinneret: 'כנרת',
   eilat: 'אילת',
+  // ספוטים שהמשתמש הוסיף יושבים בקבוצה משלהם ולא מעורבבים בין החופים
+  // המאומתים. ההפרדה היא חלק מהמסר: אלה לא אותו סוג של ידיעה.
+  mine: 'שלי',
 };
+
+/**
+ * הסעיף שנוסף לפאנל הפירוט של ספוט משתמש.
+ * שכבת האירועים יושבת ב-ui/addspot.js ומאזינה ל-data-user-action.
+ */
+export function renderUserSpotActions(spot) {
+  if (spot.source !== 'user') return '';
+  return `
+  <div class="user-actions">
+    <h3 class="d-h">הספוט הזה שלך</h3>
+    <p class="d-line d-muted">הוא נשמר במכשיר הזה בלבד, ולא יגיע ל"יש רוח" —
+      כיוון החוף שלו לא אומת בידי אדם.</p>
+    <div class="ua-row">
+      <button type="button" class="ua-btn" data-user-action="share" data-spot-id="${esc(spot.id)}">שתף</button>
+      <button type="button" class="ua-btn" data-user-action="propose" data-spot-id="${esc(spot.id)}">הצע לרג'יסטר</button>
+      <button type="button" class="ua-btn ua-danger" data-user-action="delete" data-spot-id="${esc(spot.id)}">מחק</button>
+    </div>
+  </div>`;
+}
 
 /**
  * מפרט המטאוגרם. מיוצא כי הסקראבר חייב להאכיל את chartHitTest
@@ -217,7 +240,17 @@ export function renderDetail(spot, v, extra = {}) {
   }
 
   if (extra.grid) {
-    rows.push(`<p class="d-src">התחזית היא לנקודת רשת במרחק <span dir="ltr">${extra.grid.distanceKm.toFixed(1)}</span> ק"מ מהחוף, ברזולוציה של כ-7 ק"מ.</p>`);
+    // המודל נאמר בשם רק כשהוא **אינו** ברירת המחדל. בכל שאר הספוטים זו
+    // רעש: אף אחד לא בא לכאן לקרוא שמות מודלים. אבל בספוט שהרג'יסטר
+    // הסיט ממנו את ברירת המחדל, המספר בכרטיס מגיע ממקום אחר — ואי-אמירה
+    // שלו הופכת את רצועת ההשוואה מתחתיו לבלתי ניתנת לפענוח.
+    const mi = modelInfo(extra.model);
+    rows.push(`<p class="d-src">התחזית היא לנקודת רשת במרחק <span dir="ltr">${extra.grid.distanceKm.toFixed(1)}</span> ק"מ מהחוף` +
+      (mi.resKm ? `, ברזולוציה של כ-<span dir="ltr">${mi.resKm}</span> ק"מ` : '') +
+      (mi.isDefault ? '' : `, לפי <span dir="ltr">${esc(mi.label)}</span>`) + '.</p>');
+    if (!mi.isDefault && spot.models?.reason_he) {
+      rows.push(`<p class="d-src d-muted">${heText(spot.models.reason_he)}</p>`);
+    }
   }
 
   // ----- השוואת מודלים -----
@@ -275,6 +308,8 @@ export function renderDetail(spot, v, extra = {}) {
     rows.push('<ul class="d-caveats">' + spot.sub_spots
       .map(s => `<li><b>${heText(s.name_he)}</b> — ${heText(s.note_he || '')}</li>`).join('') + '</ul>');
   }
+
+  rows.push(renderUserSpotActions(spot));
 
   // הפאנל אינו צאצא של הכרטיס בעץ ה-DOM, ולכן --lv אינו יורש אליו.
   // בלי מחלקת הדרגה כאן, המטאוגרם מצויר בצבע הטקסט במקום בצבע פסק הדין.

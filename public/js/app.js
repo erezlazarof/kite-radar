@@ -13,12 +13,16 @@ import { chartHitTest } from './ui/chart.js';
 import { pickWindow } from './verdict/engine.js';
 import { compassHe } from './verdict/bands.js';
 import { kiteRange, KITE_SIZES } from './verdict/bands.js';
+import { loadUserSpots } from './userspots.js';
+import { initAddSpot, openAddSpot, openSharedSpot, bindUserSpotActions } from './ui/addspot.js';
 
 const $ = s => document.querySelector(s);
 const LEVEL_RANK = { green: 0, yellow: 1, red: 2, blocked: 3, unknown: 4 };
 
 /** סדר גאוגרפי קבוע — צפון לדרום, ואז הגופים הנפרדים. */
-const REGION_ORDER = ['north', 'center', 'south', 'kinneret', 'eilat'];
+// 'mine' אחרון: ספוטים שהמשתמש הוסיף אינם מעורבבים בין החופים
+// המאומתים — ההפרדה היא חלק מהמסר, לא סידור.
+const REGION_ORDER = ['north', 'center', 'south', 'kinneret', 'eilat', 'mine'];
 
 /* ---------------- אתחול ---------------- */
 
@@ -28,14 +32,20 @@ async function boot() {
 
   try {
     const reg = await (await fetch('data/spots.json', { cache: 'no-cache' })).json();
-    state.spots = reg.spots;
+    state.coreSpots = reg.spots;
     state.defaults = reg.defaults;
+    mergeUserSpots();
   } catch (e) {
     $('#cards').innerHTML = `<div class="empty">לא הצלחתי לטעון את רשימת הספוטים.<br><small>${esc(e.message)}</small></div>`;
     return;
   }
 
   renderFooter();
+  initAddSpot(addSpotOpts());
+  bindUserSpotActions($('#cards'), addSpotOpts());
+  handleHash();
+  addEventListener('hashchange', handleHash);
+
   await refreshForecast();
   refreshObs();
 
@@ -47,6 +57,43 @@ async function boot() {
     if (ageMin(state.forecast?.fetchedAt) > 15) refreshForecast();
     if (ageMin(state.obs?.fetchedAt) > 5) refreshObs();
   });
+}
+
+/**
+ * הרג'יסטר שהאפליקציה עובדת מולו = הליבה + מה שהמשתמש הוסיף.
+ * המיזוג נעשה במקום אחד בכוונה: כל שאר הקוד — המנוע, המשיכה, המדידה —
+ * לא אמור לדעת בכלל שיש שני מקורות. ההבדל היחיד הוא `source: 'user'`,
+ * ואותו המנוע כבר יודע לחסום על צהוב.
+ */
+function mergeUserSpots() {
+  const core = state.coreSpots || [];
+  const ids = new Set(core.map(s => s.id));
+  state.spots = [...core, ...loadUserSpots().filter(s => !ids.has(s.id))];
+}
+
+function addSpotOpts() {
+  return {
+    get spots() { return state.spots; },
+    onChange: async id => {
+      mergeUserSpots();
+      state.expanded = id || null;
+      // ספוט חדש אינו קיים בתחזית שכבר בזיכרון, ולכן היה נראה כ"אין
+      // נתונים" עד הרענון הבא. משיכה מיידית היא ההבדל בין "הוספתי ספוט"
+      // ל"הוספתי ספוט ומשהו נשבר".
+      await refreshForecast();
+      if (id) document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    },
+  };
+}
+
+/**
+ * קישור שיתוף. **לעולם לא מוסיף בשקט** — פותח מסך אישור.
+ * שאר ה-hash (קישור עמוק לכרטיס) נשאר באחריות הדפדפן.
+ */
+function handleHash() {
+  const m = /^#addspot=(.+)$/.exec(location.hash);
+  if (!m) return;
+  openSharedSpot(m[1], addSpotOpts());
 }
 
 /* ---------------- נתונים ---------------- */
@@ -113,6 +160,7 @@ function render() {
       spot,
       v: scoreSpot(spot, forecast, obs, now, state.prefs, state.day),
       grid: f?.grid,
+      model: f?.model,
       hours: (f?.hours || []).filter(h => h.dayIndex === state.day),
       nowHour,
     };
@@ -133,12 +181,12 @@ function render() {
 
   state.chartCtx = null;
 
-  const one = ({ spot, v, grid, hours, nowHour }) => {
+  const one = ({ spot, v, grid, model, hours, nowHour }) => {
     const open = state.expanded === spot.id;
     if (!open) return renderCard(spot, v, { hours, nowHour });
 
     const extra = {
-      grid, prefs: state.prefs,
+      grid, model, prefs: state.prefs,
       // הפאנל מקבל את כל 72 השעות, לא רק את היום הנבחר
       allHours: fc.payload[spot.id]?.hours || [],
       nowHour,
@@ -375,6 +423,8 @@ function bindUI() {
     render();
     document.querySelector('.cards')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
+
+  $('#add-spot').addEventListener('click', () => openAddSpot(addSpotOpts()));
 
   const sheet = $('#sheet');
   $('#settings').addEventListener('click', () => sheet.showModal());

@@ -927,6 +927,7 @@ body.busy .status::after {
 .sheet {
   border: none; padding: 0;
   inline-size: min(440px, 100%);
+  max-inline-size: calc(100vw - 24px);
   margin-inline: auto; margin-block: auto;
   border-radius: var(--radius-lg);
   background: var(--surface); color: var(--text);
@@ -1100,3 +1101,133 @@ body.offline .measured { opacity: .72; }
 /* יעד קישור עמוק מהתראת טלגרם — הכותרת הדביקה מסתירה את ראש הכרטיס
    בלי המרווח הזה, וההתראה נוחתת על כרטיס חתוך. */
 .card { scroll-margin-block-start: 84px; }
+
+/* ==================== שלב 6 — "הוסף ספוט משלך" ==================== */
+
+.add-spot-row { margin: 18px 0 4px; text-align: center; }
+.add-spot-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px;
+  border: 1px dashed var(--border-strong); border-radius: 999px;
+  background: var(--surface-2); color: var(--text-2);
+  font-size: 13.5px; font-weight: 700;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.add-spot-btn .as-plus { font-size: 17px; line-height: 1; color: var(--accent-ink); }
+@media (hover: hover) {
+  .add-spot-btn:hover { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+}
+.add-spot-why { margin: 7px 0 0; font-size: 12px; color: var(--text-3); }
+
+/* ---- הטופס ---- */
+
+.as-input {
+  inline-size: 100%; padding: 9px 11px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-2); color: var(--text);
+  font: inherit; font-size: 14px;
+}
+.as-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.as-input::placeholder { color: var(--text-3); }
+
+.as-row { display: flex; gap: 8px; align-items: stretch; margin-block-start: 8px; }
+.as-row .as-input { flex: 1 1 auto; min-inline-size: 0; }
+
+.as-mini {
+  padding: 8px 12px; white-space: nowrap;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-2); color: var(--text-2);
+  font-size: 12.5px; font-weight: 700;
+}
+.as-mini:disabled { opacity: .55; }
+/* ⚠️ הכפתור הזה נושא שם ספוט, ושם ספוט יכול להיות ארוך. nowrap עליו
+   הרחיב את הדיאלוג כולו מעבר לרוחב המסך — הטקסט העברי נחתך בצד ההתחלה,
+   כלומר בדיוק במקום שבו מתחילים לקרוא. הוא היחיד כאן שנשבר לשורות. */
+#as-copy-normal {
+  margin-block-start: 8px;
+  white-space: normal; text-align: start;
+  max-inline-size: 100%; line-height: 1.4;
+}
+
+.as-status { margin: 8px 0 0; font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+.as-status-warn { color: var(--warn-ink); }
+
+/* ---- החוגה ---- */
+
+.as-dial {
+  /* הטוקנים יושבים כאן ולא על :root — בדיוק כמו --cmp-* על .card.
+     ערך של custom property נפתר באלמנט שבו הוא מוצהר. */
+  --cmp-safe:  var(--ok);
+  --cmp-danger: var(--danger);
+  --cmp-neutral: var(--border-strong);
+  --dial-sea:       #dbeaf4;
+  --dial-land:      #e9e3d4;
+  --dial-shoreline: var(--border-strong);
+  --dial-tick:      var(--text-3);
+  --dial-label:     var(--text-2);
+  --dial-needle:    var(--accent-ink);
+  --dial-grip:      var(--accent);
+
+  display: flex; justify-content: center;
+  margin-block: 12px 4px;
+  touch-action: none;      /* אחרת הגרירה מגלגלת את הדף במקום לסובב */
+  cursor: grab;
+  user-select: none; -webkit-user-select: none;
+}
+.as-dial:active { cursor: grabbing; }
+.as-dial svg { max-inline-size: 100%; block-size: auto; }
+.as-dial .dial-band { opacity: .62; stroke-linecap: butt; }
+.as-dial .dial-grip { cursor: grab; }
+
+/* ⚠️ ההבחנה בין ים ליבשה היא הבדיקה הראשונה שאדם עושה על החוגה:
+   "האם הים בצד הנכון". בכהה, שני הגוונים המקוריים (#0e2532 / #241f17)
+   היו כמעט זהים על רקע כהה, וההבחנה נעלמה — כלומר הבדיקה נעלמה. */
+:root[data-theme="dark"] .as-dial {
+  --dial-sea:  #14415a;
+  --dial-land: #40331f;
+  --dial-label: var(--text);
+}
+
+.as-read {
+  margin: 8px 0 0; font-size: 13px; color: var(--text-2); line-height: 1.65;
+  text-align: center;
+}
+.as-read b { color: var(--text); font-weight: 800; }
+.as-read .as-danger { color: var(--no-ink); }
+
+.as-shared {
+  margin: 0 0 14px; padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+  border-radius: 9px; background: var(--marginal-soft); color: var(--marginal-ink);
+  font-size: 12.5px; line-height: 1.55;
+}
+
+.as-errors {
+  margin-block-start: 14px; padding: 10px 12px;
+  border-radius: 9px; background: var(--no-soft); color: var(--no-ink);
+  font-size: 12.5px; line-height: 1.5;
+}
+.as-errors ul { margin: 0; padding-inline-start: 18px; }
+
+.sheet-foot {
+  padding: 12px 16px; border-block-start: 1px solid var(--border);
+  display: flex; justify-content: flex-end;
+}
+.as-save {
+  padding: 10px 22px; border-radius: 10px;
+  background: var(--accent); color: #fff;
+  font-size: 14px; font-weight: 800;
+}
+.as-save:disabled { opacity: .45; }
+
+/* ---- פעולות על ספוט משתמש, בתוך פאנל הפירוט ---- */
+
+.user-actions { margin-block-start: 14px; padding-block-start: 12px; border-block-start: 1px solid var(--border); }
+.ua-row { display: flex; flex-wrap: wrap; gap: 7px; margin-block-start: 9px; }
+.ua-btn {
+  padding: 8px 13px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-2); color: var(--text-2);
+  font-size: 12.5px; font-weight: 700;
+}
+.ua-btn.ua-danger { color: var(--no-ink); border-color: color-mix(in srgb, var(--no) 35%, transparent); }

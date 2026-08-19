@@ -542,3 +542,42 @@ test('every card is a deep-link target — alerts link to a specific beach', asy
   assert.match(html, new RegExp(`id="${s.id}"`),
     'without an id the Telegram link lands on the top of the page, not the spot');
 });
+
+/* ===================== המודל שמאחורי המספר ===================== */
+
+test('the headline number never comes from a model the registry excludes', async () => {
+  // ⚠️ הבאג שהיה כאן: `best_match` נפתר בישראל ל-ICON (נמדד בקריאה
+  // אמיתית ב-19/8/2026 — אותן שעות בדיוק בארבעה ספוטים). אילת מחריגה
+  // את ICON במפורש, ובכל זאת קיבלה אותו כמספר הגדול בכרטיס, בזמן
+  // שרצועת ההשוואה מתחתיו הראתה שני מודלים אחרים שחולקים עליו.
+  const { headlineModelFor } = await import('../public/js/sources/openmeteo.js');
+  const { BEST_MATCH_RESOLVES_TO } = await import('../public/js/config.js');
+
+  for (const s of REG.spots) {
+    const chosen = headlineModelFor(s);
+    const actual = chosen === 'best_match' ? BEST_MATCH_RESOLVES_TO : chosen;
+    const excluded = s.models?.exclude || [];
+    assert.ok(!excluded.includes(actual),
+      `${s.id}: the card would show ${actual}, which the registry excludes here`);
+  }
+});
+
+test('an excluded default falls back to a model that is actually compared', async () => {
+  const { headlineModelFor } = await import('../public/js/sources/openmeteo.js');
+  const { modelsForSpot } = await import('../public/js/sources/openmeteo.js');
+  const { MODELS } = await import('../public/js/config.js');
+
+  for (const s of REG.spots) {
+    const chosen = headlineModelFor(s);
+    if (chosen === 'best_match') continue;
+    // מספר בכרטיס שאינו אחד הקווים ברצועה הוא קו רביעי בלתי נראה
+    assert.ok(modelsForSpot(s, Object.keys(MODELS)).includes(chosen),
+      `${s.id}: headline model ${chosen} is not among the models shown in the strip`);
+  }
+});
+
+test('eilat is the spot this rule exists for', async () => {
+  const { headlineModelFor } = await import('../public/js/sources/openmeteo.js');
+  assert.equal(headlineModelFor(spot('eilat-reef-raf')), 'ecmwf_ifs025');
+  assert.equal(headlineModelFor(spot('tel-aviv')), 'best_match');
+});

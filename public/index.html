@@ -88,6 +88,13 @@
     </div>
   </main>
 
+  <div class="add-spot-row">
+    <button id="add-spot" class="add-spot-btn" type="button">
+      <span class="as-plus" aria-hidden="true">+</span> הוסף ספוט משלך
+    </button>
+    <p class="add-spot-why">חוף שאתה מכיר ואינו ברשימה. נשמר במכשיר שלך בלבד.</p>
+  </div>
+
   <footer class="footer">
     <p id="disclaimer" class="disclaimer"></p>
     <p id="attribution" class="attribution"></p>
@@ -132,6 +139,64 @@
     </div>
 
     <p id="weight-effect" class="setting-effect"></p>
+  </div>
+</dialog>
+
+<dialog id="addspot" class="sheet" aria-labelledby="addspot-title">
+  <form method="dialog" class="sheet-head">
+    <h2 id="addspot-title">הוסף ספוט משלך</h2>
+    <button class="sheet-x" aria-label="סגור">✕</button>
+  </form>
+
+  <div class="sheet-body">
+    <p id="as-shared-note" class="as-shared" hidden>
+      מישהו שיתף איתך ספוט. <b>בדוק את הכיוון בחוגה לפני שאתה מוסיף</b> —
+      כיוון חוף שגוי הופך רוח מסוכנת לרוח שנראית בטוחה.
+    </p>
+
+    <p class="sheet-note">
+      ספוט שתוסיף כאן נשמר <b>במכשיר שלך בלבד</b>, ולא יגיע ל״יש רוח״ —
+      כיוון החוף שלו לא אומת בידי אדם, וזה המספר היחיד שטעות בו מסוכנת.
+    </p>
+
+    <div class="setting">
+      <label class="setting-title" for="as-name">שם הספוט</label>
+      <input id="as-name" class="as-input" type="text" maxlength="40" autocomplete="off"
+             placeholder="למשל: החוף מול הקראוונים">
+    </div>
+
+    <div class="setting">
+      <label class="setting-title" for="as-coords">איפה זה</label>
+      <div class="as-row">
+        <input id="as-coords" class="as-input" type="text" inputmode="decimal" autocomplete="off"
+               placeholder="31.90280, 34.68900" dir="ltr">
+        <button type="button" id="as-locate" class="as-mini">מיקום נוכחי</button>
+      </div>
+      <p class="setting-why">
+        בגוגל מפות: לחיצה ארוכה על הנקודה ← העתקת הקואורדינטות. אפשר גם להדביק קישור שלם.
+      </p>
+      <p id="as-coord-status" class="as-status"></p>
+    </div>
+
+    <div class="setting">
+      <span class="setting-title">לאיזה כיוון החוף פונה</span>
+      <div id="as-dial" class="as-dial" role="application" aria-label="חוגת כיוון החוף"></div>
+      <label class="sr-only" for="as-deg">כיוון החוף במעלות</label>
+      <input id="as-deg" type="range" min="0" max="359" step="1" value="270">
+      <p id="as-dial-read" class="as-read"></p>
+      <button type="button" id="as-copy-normal" class="as-mini" hidden></button>
+      <p class="setting-why">
+        גרור את הידית עד שהחץ מצביע <b>מהחוף אל הים</b>. הרצועה האדומה היא
+        הרוחות שידחפו אותך אל הים הפתוח — אם היא לא יושבת על הרוח שאתה
+        מכיר כמסוכנת שם, הכיוון עדיין לא נכון.
+      </p>
+    </div>
+
+    <div id="as-errors" class="as-errors" role="alert" hidden></div>
+  </div>
+
+  <div class="sheet-foot">
+    <button type="button" id="as-save" class="as-save">הוסף</button>
   </div>
 </dialog>
 

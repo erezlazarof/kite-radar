@@ -34,7 +34,7 @@ export const FLAG_HE = {
   model_spread:    { icon: '≈', short: 'מודלים חלוקים', text: 'מודלי התחזית חלוקים ביניהם.', severity: 'critical' },
   obs_disagrees:   { icon: '◆', short: 'מדידה חלוקה', text: 'התחנה מודדת משהו אחר ממה שהמודל חזה. כשאלה לא מסכימים, מה שיש לנו הוא חוסר ידיעה ולא תשובה אחרת.', severity: 'critical' },
   stale:           { icon: '⏱', short: 'נתון ישן', text: 'הנתון לא טרי.', severity: 'critical' },
-  unverified_spot: { icon: '◎', short: 'לא אומת', text: 'לא נמצאה עדות שגולשים כאן בפועל. הגיאומטריה של החוף נגזרה ממפה ולא אומתה — ולכן אין דירוג ירוק.', severity: 'critical' },
+  unverified_spot: { icon: '◎', short: 'לא אומת', text: 'כיוון החוף כאן לא אומת בידי אדם — הוא נגזר ממפה או הוגדר ידנית. כיוון שגוי הופך רוח מסוכנת לרוח שנראית בטוחה, ולכן אין דירוג ירוק.', severity: 'critical' },
   skill_advanced:  { icon: '⚑', short: 'למתקדמים', text: 'ספוט למתקדמים בלבד.', severity: 'skip' },
   hard_launch:     { icon: '⚠', text: 'הרוח מגיעה ישר מהים — ההמראה והנחיתה קשות יותר, אבל היא גם מחזירה אותך לחוף.', severity: 'note' },
 };

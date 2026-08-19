@@ -12,6 +12,9 @@
              inset-block-start:0; background:var(--bg); z-index:5; }
   .gal-bar button { padding:7px 14px; border:1px solid var(--border);
                     border-radius:999px; background:var(--surface); font-size:13px; }
+  .gal-dials { display:flex; flex-wrap:wrap; gap:10px; }
+  .gal-dial { margin:0; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .gal-dial figcaption { font-size:12px; color:var(--text-3); font-weight:700; }
 </style>
 </head>
 <body>
@@ -26,6 +29,8 @@
 <script type="module">
 import { renderCard, renderDetail } from '../js/ui/card.js';
 import { scoreSpot } from '../js/verdict/engine.js';
+import { makeUserSpot } from '../js/userspots.js';
+import { renderDial } from '../js/ui/dial.js';
 
 if (location.search.includes('dark')) document.documentElement.dataset.theme = 'dark';
 
@@ -53,6 +58,10 @@ function day({ peak = 15, peakHour = 15, gustRatio = 1.25, dir = 290, holes = []
 }
 
 const NOW = Date.UTC(2026, 7, 18, 10);   // 18/8/2026, 13:00 שעון ישראל
+
+/** ספוט משתמש סינתטי — אותו נתון כמו בת ים, ובכל זאת לא ירוק */
+const MINE = makeUserSpot({ id: 'u-demo', name: 'החוף מול הקראוונים',
+                            lat: 32.0158, lon: 34.7395, shoreNormalDeg: 292 });
 
 /** משכפל יום סינתטי לשלושה, עם דעיכה — כדי שהמטאוגרם יראה מה שהוא יראה בפועל */
 function threeDays(day0) {
@@ -82,10 +91,17 @@ const CASES = [
   ['אין נתונים', S('bat-yam', 'center'), [], NOW],
   ['נתון ישן', S('bat-yam', 'center'), day({ peak: 19, dir: 300 }), NOW, 120],
   ['חורים בנתונים', S('betzet', 'north'), day({ peak: 18, dir: 290, holes: [10, 11, 16] }), NOW],
+  // שלב 6 — אותה רוח שנותנת ירוק בספוט ליבה, חסומה על צהוב כאן
+  ['ספוט שהמשתמש הוסיף', MINE, day({ peak: 19, dir: 300 }), NOW],
 ];
 
 const host = document.querySelector('#cards');
-host.innerHTML = CASES.map(([label, spot, hours, now, ageMin = 3]) => {
+
+// ?only=dials — פס החוגות בלבד. גלריה בת 3400 פיקסלים אינה ניתנת
+// לבדיקה ויזואלית בצילום אחד, וחוגה שגויה מתגלה רק כשרואים אותה בגודל.
+const ONLY = new URLSearchParams(location.search).get('only');
+
+host.innerHTML = ONLY === 'dials' ? '' : CASES.map(([label, spot, hours, now, ageMin = 3]) => {
   const fc = { hours, ageMin };
   const v = scoreSpot(spot, fc, null, now, { weightKg: 75 }, 0);
   return `<p class="gal-h">${label}</p>` +
@@ -100,13 +116,22 @@ host.innerHTML = CASES.map(([label, spot, hours, now, ageMin = 3]) => {
          });
 }).join('');
 
-if (missing.length) {
+if (missing.length && ONLY !== 'dials') {
   const p = document.createElement('p');
   p.className = 'gal-h';
   p.style.color = 'var(--no)';
   p.textContent = 'ספוטים שלא נמצאו ברג׳יסטר והוחלפו בתחליף מאותו אזור: ' + [...new Set(missing)].join(' · ');
   host.prepend(p);
 }
+
+// ---- פס החוגות. שינוי בגיאומטריה נראה כאן לפני שהוא נראה במסך החי ----
+const DIALS = [0, 45, 90, 180, 270, 292, 359];
+host.insertAdjacentHTML('beforeend',
+  '<p class="gal-h">חוגת כיוון החוף — הרצועה האדומה חייבת לשבת מול הניצב</p>' +
+  '<div class="gal-dials">' +
+  DIALS.map(d => `<figure class="as-dial gal-dial">${renderDial(d, { size: 132 })}` +
+                 `<figcaption><span dir="ltr">${d}°</span></figcaption></figure>`).join('') +
+  '</div>');
 
 document.querySelector('#t').onclick = () => {
   const r = document.documentElement;

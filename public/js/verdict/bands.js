@@ -243,6 +243,18 @@ export function compassHe(deg) {
   return COMPASS_HE[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
 }
 
+/**
+ * אותו כיוון כשם עצם. COMPASS_HE הוא תואר ומתאים לרוח ("רוח מערבית"),
+ * אבל חוף אינו רוח: "החוף פונה למערבית" אינו עברית. שני הניסוחים חיים
+ * זה לצד זה בכוונה, כי שניהם מופיעים באותו משפט בחוגה.
+ */
+const COMPASS_NOUN_HE = ['צפון', 'צפון-מזרח', 'מזרח', 'דרום-מזרח',
+                         'דרום', 'דרום-מערב', 'מערב', 'צפון-מערב'];
+
+export function compassNounHe(deg) {
+  return COMPASS_NOUN_HE[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
+}
+
 export const DIR_CLASS_HE = {
   onshore: 'ישר מהים',
   side_onshore: 'צד-פנימה',

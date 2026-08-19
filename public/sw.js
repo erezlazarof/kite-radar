@@ -18,7 +18,7 @@
    ימשיך להריץ קוד ישן גם אחרי push — וזו תקלה שקשה לאבחן מרחוק.
    ========================================================================= */
 
-const CACHE_V = 'kite-v3';
+const CACHE_V = 'kite-v4';
 const SHELL = `${CACHE_V}-shell`;
 const RUNTIME = `${CACHE_V}-runtime`;
 
@@ -32,11 +32,14 @@ const SHELL_FILES = [
   './js/app.js',
   './js/config.js',
   './js/store.js',
+  './js/userspots.js',
   './js/sources/openmeteo.js',
   './js/sources/obs.js',
   './js/sources/ims-parse.js',
   './js/sources/obs-parse.js',
+  './js/ui/addspot.js',
   './js/ui/card.js',
+  './js/ui/dial.js',
   './js/ui/chart.js',
   './js/ui/compass.js',
   './js/ui/modelstrip.js',
