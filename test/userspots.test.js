@@ -18,7 +18,7 @@ import {
   nearestStation, nearestCoreSpot, stationsFromRegistry, duplicateOf,
   encodeShare, decodeShare, shareUrl, issueBody,
   loadUserSpots, saveUserSpots, addUserSpot, removeUserSpot,
-  ISRAEL_BBOX, MAX_STATION_KM, LS_KEY,
+  ISRAEL_BBOX, MAX_STATION_KM, MAX_USER_SPOTS, LS_KEY,
 } from '../public/js/userspots.js';
 import { renderDial, dialSentence, bearingAt } from '../public/js/ui/dial.js';
 import { directionClass } from '../public/js/verdict/bands.js';
@@ -161,7 +161,7 @@ test('הרשומה נושאת כל שדה שהמנוע והתצוגה נוגעי
   assert.equal(s.daytime_window, null);
 });
 
-test('הוספה, מחיקה וגבול כמות', () => {
+test('הוספה, מחיקה, ומזהה כפול', () => {
   stubStorage();
   const mk = i => makeUserSpot({ id: `u-t-${i}`, name: `ספוט ${i}`, lat: 32 + i / 1000, lon: 34.75, shoreNormalDeg: 270 });
   assert.equal(addUserSpot(mk(1)).ok, true);
@@ -169,6 +169,21 @@ test('הוספה, מחיקה וגבול כמות', () => {
   assert.equal(loadUserSpots().length, 1);
   removeUserSpot('u-t-1');
   assert.equal(loadUserSpots().length, 0);
+});
+
+test('גבול הכמות נאכף — הספוט שמעבר לו נדחה, לא נבלע', () => {
+  // ⚠️ בלי זה, ספוט מעבר לגבול היה מדווח כהצלחה בזמן ש-localStorage
+  // זורק QuotaExceededError ו-saveUserSpots בולעת אותו בשקט.
+  stubStorage();
+  const mk = i => makeUserSpot({ id: `u-q-${i}`, name: `ספוט ${i}`, lat: 32 + i / 1000, lon: 34.75, shoreNormalDeg: 270 });
+  for (let i = 0; i < MAX_USER_SPOTS; i++) {
+    assert.equal(addUserSpot(mk(i)).ok, true, `ספוט ${i} מתוך ${MAX_USER_SPOTS} נדחה מוקדם מדי`);
+  }
+  assert.equal(loadUserSpots().length, MAX_USER_SPOTS);
+  const over = addUserSpot(mk(MAX_USER_SPOTS));
+  assert.equal(over.ok, false, 'הספוט שמעבר לגבול חייב להידחות');
+  assert.match(over.error, new RegExp(String(MAX_USER_SPOTS)));
+  assert.equal(loadUserSpots().length, MAX_USER_SPOTS, 'ולא להישמר בכל זאת');
 });
 
 test('מזהה ספוט משתמש נושא קידומת u- ולעולם לא מתנגש בליבה', () => {
@@ -191,6 +206,26 @@ test('תחנה נבחרת רק בטווח — הסף לא נמתח לספוט מ
 
   // אמצע הנגב — אין שום תחנת חוף בטווח
   assert.equal(nearestStation(30.8, 34.9, REG.spots), null);
+});
+
+test('הסף הוא באמת 12 ק״מ — נבדק משני צדדיו, לא מול עצמו', () => {
+  // ⚠️ הבדיקה שמעליה עוברת גם אם MAX_STATION_KM ישונה ל-90: היא רק
+  // מאשרת מחדש את החוזה של הפונקציה. כאן נבנות שתי נקודות במרחק ידוע
+  // מתחנה אמיתית, ממש משני צדי הסף.
+  const st = stationsFromRegistry(REG.spots).find(x => x.ims === 'TEL AVIV COAST');
+  assert.ok(st, 'התחנה חייבת להיות ברג׳יסטר');
+  const KM_PER_DEG_LAT = 111.19;
+  const at = km => ({ lat: st.lat + km / KM_PER_DEG_LAT, lon: st.lon });
+
+  const inside = at(MAX_STATION_KM - 0.5);
+  const outside = at(MAX_STATION_KM + 0.5);
+
+  const hit = nearestStation(inside.lat, inside.lon, REG.spots);
+  assert.ok(hit, `${MAX_STATION_KM - 0.5} ק״מ חייב להתקבל`);
+  assert.ok(hit.distance_km <= MAX_STATION_KM);
+
+  assert.equal(nearestStation(outside.lat, outside.lon, REG.spots), null,
+    `${MAX_STATION_KM + 0.5} ק״מ חייב להידחות — התחנה כבר לא מייצגת את החוף`);
 });
 
 test('טבלת התחנות נגזרת מהרג׳יסטר ואין בה כפילויות', () => {
@@ -226,10 +261,43 @@ test('קידוד ופענוח — הלוך ושוב, כולל עברית', () =>
 });
 
 test('המטען בקישור בטוח ל-URL — בלי +, / או =', () => {
-  const s = makeUserSpot({ name: 'שם עם רווחים ועברית', lat: 32.5, lon: 34.9, shoreNormalDeg: 300 });
-  const enc = encodeShare(s);
-  assert.doesNotMatch(enc, /[+/=]/);
-  assert.equal(shareUrl(s, 'https://x.dev/app#old'), `https://x.dev/app#addspot=${enc}`);
+  // ⚠️ הבדיקה חייבת קודם להוכיח שהפיקסצ׳ר שלה בכלל מייצר את התו הבעייתי.
+  // עם שם שה-base64 הגולמי שלו ממילא נקי, הבדיקה עוברת גם אם ההמרה
+  // ל-base64url תימחק כליל — וזה בדיוק מה שקרה כאן קודם.
+  const names = ['בת ים', 'מכמורת', 'הבונים', 'שם עם רווחים ועברית', 'חוף הקראוונים'];
+  const raw = n => btoa(String.fromCharCode(...new TextEncoder().encode(
+    JSON.stringify({ v: 1, n, y: 32.5, x: 34.9, d: 300 }))));
+
+  const dirty = names.filter(n => /[+/=]/.test(raw(n)));
+  assert.ok(dirty.length > 0,
+    'הפיקסצ׳ר חסר ערך אם אף שם לא מייצר +, / או = ב-base64 הגולמי');
+
+  for (const n of names) {
+    const enc = encodeShare(makeUserSpot({ name: n, lat: 32.5, lon: 34.9, shoreNormalDeg: 300 }));
+    assert.doesNotMatch(enc, /[+/=]/, `${n} ייצר מטען לא בטוח ל-URL`);
+    assert.equal(decodeShare(enc).draft.name, n, `${n} לא שרד הלוך ושוב`);
+  }
+
+  const s = makeUserSpot({ name: 'בת ים', lat: 32.5, lon: 34.9, shoreNormalDeg: 300 });
+  assert.equal(shareUrl(s, 'https://x.dev/app#old'), `https://x.dev/app#addspot=${encodeShare(s)}`);
+});
+
+test('קישור בלי כיוון חוף נדחה — לא מקבל 0 מעלות בשקט', () => {
+  // ⚠️ Number(null) הוא 0. קישור עם d חסר היה מייצר ניצב חוף של צפון,
+  // עובר אימות, ומגיע למשתמש כנתון בטיחותי שאיש לא כתב.
+  const enc = o => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o))))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const base = { v: 1, n: 'חוף', y: 32.0853, x: 34.7818 };
+
+  for (const bad of [null, undefined, '', false, 'צפון', {}]) {
+    const r = decodeShare(enc({ ...base, d: bad }));
+    assert.equal(r.ok, false, `d=${JSON.stringify(bad)} התקבל כתקין`);
+  }
+  for (const bad of [null, '', false]) {
+    assert.equal(decodeShare(enc({ ...base, y: bad })).ok, false, `y=${JSON.stringify(bad)} התקבל`);
+    assert.equal(decodeShare(enc({ ...base, x: bad })).ok, false, `x=${JSON.stringify(bad)} התקבל`);
+  }
+  assert.equal(decodeShare(enc({ ...base, d: 0 })).ok, true, 'אפס מפורש הוא כיוון חוקי');
 });
 
 test('קישור פגום מוחזר כשגיאה ולא כחריגה', () => {
@@ -265,7 +333,7 @@ test('הרצועה האדומה בחוגה היא בדיוק מה שהמנוע �
   // ⚠️ האינווריאנטה המרכזית של שלב 6. החוגה היא הדרך היחידה שבה אדם
   // בודק את `shore_normal_deg`, והוא בודק אותה לפי הצבעים. אם הרצועה
   // האדומה והמנוע יתפצלו, המשתמש יאשר כיוון שגוי מתוך תצוגה שנראית נכונה.
-  for (let sn = 0; sn < 360; sn += 7) {
+  for (let sn = 0; sn < 360; sn += 1) {
     const spot = { shore_normal_deg: sn, direction_overrides: [] };
     const s = dialSentence(sn);
     // הפְּנים **הפתוח** של הקשת. הקצה עצמו הוא בדיוק offAxis == 112,
@@ -356,4 +424,60 @@ test('פאנל ספוט משתמש מציע שיתוף, קידום ומחיקה 
     assert.match(html, new RegExp(`data-user-action="${a}"`));
   }
   assert.equal(renderUserSpotActions(REG.spots[0]), '');
+});
+
+test('הרצועות שמצוירות בפועל נושאות את הצבע הנכון — נבדק על ה-SVG, לא על החישוב', () => {
+  // ⚠️ הבדיקה הגדולה שמעלינו מאמתת את dialSentence — כלומר את המתמטיקה.
+  // היא **לא נוגעת ב-renderDial**, ולכן החלפת שני ארגומנטי הצבע בקריאות
+  // band() הייתה צובעת את קשת הסכנה בירוק ואת קשת הבטיחות באדום, וכל
+  // הבדיקות היו ממשיכות לעבור. המשתמש בודק את ניצב החוף לפי הצבעים,
+  // ולכן מה שנצבע הוא הליבה הבטיחותית — לא מה שחושב.
+  const C = 50, R_BAND = 41;
+  const bearingOf = (x, y) => ((Math.atan2(x - C, C - y) * 180 / Math.PI) + 360) % 360;
+
+  const parseBands = svg => {
+    const re = /<path d="M ([\d.+-]+) ([\d.+-]+) A [\d.]+ [\d.]+ 0 \d 1 ([\d.+-]+) ([\d.+-]+)"[^>]*var\((--cmp-[a-z]+)/g;
+    const out = [];
+    let m;
+    while ((m = re.exec(svg)) !== null) {
+      out.push({ token: m[5], from: bearingOf(+m[1], +m[2]), to: bearingOf(+m[3], +m[4]) });
+    }
+    return out;
+  };
+
+  const span = (from, to) => ((to - from) % 360 + 360) % 360;
+
+  for (const sn of [0, 45, 90, 115, 180, 190, 270, 278, 290, 359]) {
+    const spot = { shore_normal_deg: sn, direction_overrides: [] };
+    const bands = parseBands(renderDial(sn));
+
+    assert.equal(bands.length, 4, `ניצב ${sn}: ציפינו לארבע רצועות`);
+    const danger = bands.filter(b => b.token === '--cmp-danger');
+    const safe = bands.filter(b => b.token === '--cmp-safe');
+    assert.equal(danger.length, 1, `ניצב ${sn}: חייבת להיות בדיוק רצועת סכנה אחת`);
+    assert.equal(safe.length, 1, `ניצב ${sn}: חייבת להיות בדיוק רצועת בטיחות אחת`);
+
+    // הקשתות נדגמות מבפנים, עם שוליים של מעלה — הקצה עצמו הוא גבול
+    // המעבר, והנקודות ב-d מעוגלות לשתי ספרות.
+    const sample = (b, expect, what) => {
+      const w = span(b.from, b.to);
+      assert.ok(w > 1, `ניצב ${sn}: רצועת ${what} ריקה`);
+      // שוליים של 1.5°: קצה הקשת הוא **בדיוק** גבול הסיווג (offAxis 112),
+      // ונקודות ה-d מעוגלות לשתי ספרות. הפְּנים הוא מה שנטען כאן; הקצה
+      // עצמו נצמד למטה דרך רוחב הקשת.
+      for (let t = 1.5; t < w - 1.5; t += 1) {
+        const wind = (b.from + t) % 360;
+        const cls = directionClass(wind, spot).cls;
+        assert.ok(expect.includes(cls),
+          `ניצב ${sn}: הרצועה הצבועה ${b.token} מכסה רוח ${Math.round(wind)}°, שהמנוע מסווג ${cls}`);
+      }
+    };
+
+    sample(danger[0], ['offshore', 'side_offshore'], 'הסכנה');
+    sample(safe[0], ['onshore', 'side_onshore'], 'הבטיחות');
+
+    // ורוחב הקשתות אינו מקרי: הסכנה היא 2×(180−112), הבטיחות 2×67
+    assert.ok(Math.abs(span(danger[0].from, danger[0].to) - 136) <= 2, `ניצב ${sn}: רוחב קשת הסכנה`);
+    assert.ok(Math.abs(span(safe[0].from, safe[0].to) - 134) <= 2, `ניצב ${sn}: רוחב קשת הבטיחות`);
+  }
 });

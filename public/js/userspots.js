@@ -283,7 +283,11 @@ export function decodeShare(str) {
   if (!o || typeof o !== 'object') return { ok: false, error: 'הקישור לא תקין.' };
   if (o.v !== SHARE_VERSION) return { ok: false, error: 'הקישור נוצר בגרסה אחרת של האתר.' };
 
-  const draft = { name: String(o.n ?? ''), lat: Number(o.y), lon: Number(o.x), shoreNormalDeg: Number(o.d) };
+  // ⚠️ אותה מלכודת כמו בטופס, ומסוכנת יותר: `Number(null)` הוא 0, ולכן
+  // קישור עם `d` חסר או ריק היה מייצר **ניצב חוף של 0° — צפון** בשקט,
+  // ועובר את האימות. קישור מגיע מבחוץ; הוא לא זכאי לניחוש.
+  const numOrNaN = v => (v === null || v === undefined || v === '' || typeof v === 'boolean' ? NaN : Number(v));
+  const draft = { name: String(o.n ?? ''), lat: numOrNaN(o.y), lon: numOrNaN(o.x), shoreNormalDeg: numOrNaN(o.d) };
   const check = validateUserSpot(draft);
   if (!check.ok) return { ok: false, error: check.errors[0] };
   return { ok: true, draft };

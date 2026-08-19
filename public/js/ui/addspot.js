@@ -26,7 +26,7 @@ import {
 } from '../userspots.js';
 import { renderDial, bearingAt, dialSentence } from './dial.js';
 import { compassHe, compassNounHe } from '../verdict/bands.js';
-import { esc, heText } from './card.js';
+import { esc, ltr } from './card.js';
 import { GITHUB } from '../config.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -164,24 +164,39 @@ function recomputeGeo(opts) {
 
 function updateGeoStatus(overrideMsg) {
   const el = $('#as-coord-status');
-  if (overrideMsg) { el.className = 'as-status as-status-warn'; el.textContent = overrideMsg; return; }
-  if (draft.lat == null) { el.className = 'as-status'; el.textContent = ''; return; }
+  // ⚠️ כל יציאה מוקדמת חייבת להסתיר גם את כפתור ההעתקה. בלי זה הוא נשאר
+  // על המסך עם שם ספוט שכבר אינו רלוונטי, ולחיצה עליו כותבת ניצב חוף
+  // ששייך לנקודה אחרת לגמרי.
+  const copyBtn = $('#as-copy-normal');
+  if (overrideMsg) {
+    el.className = 'as-status as-status-warn'; el.textContent = overrideMsg;
+    copyBtn.hidden = true; return;
+  }
+  if (draft.lat == null) {
+    el.className = 'as-status'; el.textContent = '';
+    copyBtn.hidden = true; return;
+  }
 
   const bits = [];
-  if (draft.swapped) bits.push('הפכתי בין רוחב לאורך');
-  if (draft.near) bits.push(`<span dir="ltr">${draft.near.km}</span> ק"מ מ${esc(draft.near.spot.name_he)}`);
+  // היפוך רוחב/אורך הוא תיקון בנתון הבטיחותי השני בחשיבותו. הוא נאמר
+  // בצבע אזהרה ולא כפריט אחד ברשימה אפורה — נ.צ. של קפריסין הופך בו
+  // לנקודה תקפה בישראל, וזה שינוי שהמשתמש חייב לראות.
+  if (draft.swapped) bits.push('⚠️ הפכתי בין רוחב לאורך — לוודא שזו הנקודה הנכונה');
+  if (draft.near) bits.push(`${ltr(draft.near.km)} ק"מ מ${esc(draft.near.spot.name_he)}`);
+  // ⚠️ קוד תחנה הוא לטיני רב-מילי. heText עוטף כל מילה בנפרד, ואז
+  // "TEL AVIV COAST" נקרא "COAST AVIV TEL". בלוק אחד, לא מילה-מילה.
   bits.push(draft.station
-    ? `תחנת ${heText(draft.station.ims)} במרחק <span dir="ltr">${draft.station.distance_km}</span> ק"מ`
+    ? `תחנת ${ltr(draft.station.ims)} במרחק ${ltr(draft.station.distance_km)} ק"מ`
     : 'אין תחנת מדידה בטווח — לא תהיה מדידה חיה');
 
-  el.className = 'as-status' + (draft.station ? '' : ' as-status-warn');
+  el.className = 'as-status' + (draft.station && !draft.swapped ? '' : ' as-status-warn');
   el.innerHTML = bits.join(' · ');
 
   const copy = $('#as-copy-normal');
   copy.hidden = !draft.near;
   if (draft.near) {
     copy.innerHTML = `העתק כיוון מ${esc(shortName(draft.near.spot.name_he))} ` +
-      `(<span dir="ltr">${draft.near.spot.shore_normal_deg}°</span>)`;
+      `(${ltr(draft.near.spot.shore_normal_deg + '°')})`;
   }
 }
 
@@ -229,6 +244,11 @@ function bindDial(opts) {
   };
 
   host.addEventListener('pointerdown', e => {
+    // ⚠️ ה-host הוא flex ברוחב מלא, והחוגה 190 פיקסלים בתוכו — כלומר יש
+    // עשרות פיקסלים של שטח מת משני הצדדים. בלי הבדיקה הזו, נגיעה מקרית
+    // בשוליים בזמן גלילה **כותבת מחדש את ניצב החוף** בלי שאיש ישים לב.
+    // אחרי שהגרירה התחילה על החוגה היא ממשיכה גם מחוצה לה — זו גרירה.
+    if (!e.target.closest('svg')) return;
     dragging = true;
     host.setPointerCapture?.(e.pointerId);
     move(e);

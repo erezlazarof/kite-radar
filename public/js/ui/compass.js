@@ -231,12 +231,15 @@ export function renderCompass(windFromDeg, spot, opts) {
     p.push(band('cmp-safe-arc', shore - SAFE_HALF, shore + SAFE_HALF, '--cmp-safe', '.8'));
     p.push(band('cmp-danger-arc', shore + 180 - DANGER_HALF, shore + 180 + DANGER_HALF, '--cmp-danger', '.8'));
 
-    // ---- 3ב. חריג אילת ----
-    // בחוף הצפוני של אילת הצפונית היא גיאומטרית אופשור, אבל היא מצב הרכיבה
-    // הרגיל והמקובל (מים שטוחים, סירות הצלה של המועדון). הספוט נושא
-    // direction_overrides עם class: "offshore_managed", והקשת מצוירת *מעל*
-    // הרצועות הגנריות — בדיוק כפי ש-directionClass בודקת אותה לפני המיפוי
-    // הגנרי. אסור שהיא תרד בשקט לאדום, ואסור שתעלה בשקט לירוק.
+    // ---- 3ב. קשתות חריג ----
+    // ⚠️ **כרגע אין אף ספוט ברג'יסטר עם direction_overrides.** חוף אילת
+    // הצפוני נשא חריג "אופשור מנוהל", והוא הוסר כשהתברר שזה חוף רחצה
+    // ומרינה ולא חוף הקייט (ארז אישר 19/8/26 שהוא גולש בריף רף). הקוד
+    // נשאר כי המנגנון עצמו נכון ומכוסה בבדיקות על פיקסצ'ר — אבל אין
+    // להסיק מכאן שקיים חוף שבו אופשור הוא מצב רכיבה מקובל.
+    //
+    // קשת חריג מצוירת *מעל* הרצועות הגנריות, בדיוק כפי ש-directionClass
+    // בודקת אותה לפני המיפוי הגנרי. אסור שתרד בשקט לאדום או תעלה לירוק.
     overrides.forEach((ov, i) => {
       const from = Number((ov || {}).from), to = Number((ov || {}).to);
       if (!Number.isFinite(from) || !Number.isFinite(to)) return;

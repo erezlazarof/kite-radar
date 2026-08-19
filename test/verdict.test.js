@@ -581,3 +581,48 @@ test('eilat is the spot this rule exists for', async () => {
   assert.equal(headlineModelFor(spot('eilat-reef-raf')), 'ecmwf_ifs025');
   assert.equal(headlineModelFor(spot('tel-aviv')), 'best_match');
 });
+
+test('the checked-in registry map is not a stale artifact', async () => {
+  // ⚠️ `public/dev/map.html` הוא תוצר מחולל שנשמר בגיט, ו-HANDOFF מפנה
+  // אליו כ"מפת הרג'יסטר". הוא נשאר תקוע על 42 ספוטים — כולל פולג,
+  // קונטיקי וגעש — חודשים אחרי שהרג'יסטר נגזם ל-26. קורא שהולך לראות
+  // את הרג'יסטר ראה שלושה ספוטים שכבר אינם בו, ובטח שיש להם מדידה חיה.
+  const map = readFileSync(new URL('../public/dev/map.html', import.meta.url), 'utf8');
+
+  const count = /<b>(\d+)<\/b><span>SPOTS<\/span>/.exec(map);
+  assert.ok(count, 'the map must carry a spot count');
+  assert.equal(+count[1], REG.spots.length,
+    `map.html shows ${count[1]} spots, registry has ${REG.spots.length} — rebuild with: node public/dev/build-map.js public/dev/map.html`);
+
+  // שם הספוט נכתב למפה מוגן-HTML, ו-palmachim נושא גרשיים בשמו
+  const plain = map
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  for (const s of REG.spots) {
+    assert.ok(plain.includes(s.name_he), `${s.id} is missing from the map`);
+  }
+  // ושמות שנגזמו לא נשארים מאחור
+  for (const gone of ['פולג', 'קונטיקי', 'געש']) {
+    if (!REG.spots.some(s => s.name_he.includes(gone))) {
+      assert.ok(!plain.includes(gone), `${gone} was pruned from the registry but still appears on the map`);
+    }
+  }
+});
+
+test('every card expansion goes through setExpanded — so the model strip always loads', () => {
+  // ⚠️ הבאג: `onChange` של "הוסף ספוט" הציב `state.expanded` ישירות ודילג
+  // על `loadModels`. הכרטיס החדש נפתח אוטומטית ורצועת ההשוואה שלו נתקעה
+  // על "טוען השוואה…" לנצח, כי `state.models[id]` נשאר undefined ואין שום
+  // מסלול אחר שממלא אותו. שער מבני: אין השמה ישירה מחוץ לפונקציה האחת.
+  const app = readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
+
+  // (?!=) — אחרת גם `state.expanded === id` נספר כהשמה
+  const assignments = [...app.matchAll(/state\.expanded\s*=(?!=)/g)];
+  assert.equal(assignments.length, 1,
+    'state.expanded may only be assigned inside setExpanded()');
+
+  const fn = /function setExpanded\([\s\S]*?\n}/.exec(app);
+  assert.ok(fn, 'setExpanded must exist');
+  assert.match(fn[0], /state\.expanded\s*=/, 'the single assignment must be the one inside setExpanded');
+  assert.match(fn[0], /loadModels\(/, 'setExpanded must be able to pull the model comparison');
+});

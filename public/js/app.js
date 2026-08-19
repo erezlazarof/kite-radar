@@ -76,12 +76,17 @@ function addSpotOpts() {
     get spots() { return state.spots; },
     onChange: async id => {
       mergeUserSpots();
-      state.expanded = id || null;
+      // ⚠️ דרך setExpanded ולא בהשמה ישירה: הרחבה שאינה מגיעה מלחיצה
+      // דילגה על loadModels, והכרטיס החדש נתקע על "טוען השוואה…" לנצח.
+      setExpanded(id || null, { load: false });
       // ספוט חדש אינו קיים בתחזית שכבר בזיכרון, ולכן היה נראה כ"אין
       // נתונים" עד הרענון הבא. משיכה מיידית היא ההבדל בין "הוספתי ספוט"
       // ל"הוספתי ספוט ומשהו נשבר".
       await refreshForecast();
-      if (id) document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (id) {
+        loadModels(id);
+        document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
     },
   };
 }
@@ -90,6 +95,16 @@ function addSpotOpts() {
  * קישור שיתוף. **לעולם לא מוסיף בשקט** — פותח מסך אישור.
  * שאר ה-hash (קישור עמוק לכרטיס) נשאר באחריות הדפדפן.
  */
+/**
+ * נקודת הכניסה היחידה לפתיחה וסגירה של כרטיס.
+ * כל מסלול אחר ששכח את loadModels משאיר את רצועת ההשוואה על "טוען".
+ */
+function setExpanded(id, { load = true } = {}) {
+  state.expanded = id;
+  render();
+  if (id && load) loadModels(id);
+}
+
 function handleHash() {
   const m = /^#addspot=(.+)$/.exec(location.hash);
   if (!m) return;
@@ -375,9 +390,7 @@ function bindUI() {
     const card = e.target.closest('.card');
     if (!card) return;
     const id = card.dataset.spot;
-    state.expanded = state.expanded === id ? null : id;
-    render();
-    if (state.expanded) loadModels(state.expanded);
+    setExpanded(state.expanded === id ? null : id);
   });
 
   $('#cards').addEventListener('keydown', e => {
@@ -385,9 +398,7 @@ function bindUI() {
     const card = e.target.closest('.card');
     if (!card) return;
     e.preventDefault();
-    state.expanded = state.expanded === card.dataset.spot ? null : card.dataset.spot;
-    render();
-    if (state.expanded) loadModels(state.expanded);
+    setExpanded(state.expanded === card.dataset.spot ? null : card.dataset.spot);
   });
 
   // סקראבר: מגע אחד שמעדכן שורת קריאה. בלי pan, בלי zoom, בלי pinch —
@@ -419,8 +430,7 @@ function bindUI() {
     const b = e.target.closest('[data-region]');
     if (!b) return;
     state.region = b.dataset.region;
-    state.expanded = null;
-    render();
+    setExpanded(null);
     document.querySelector('.cards')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
 
@@ -439,9 +449,8 @@ function bindUI() {
   document.querySelectorAll('[data-day]').forEach(btn => {
     btn.addEventListener('click', () => {
       state.day = +btn.dataset.day;
-      state.expanded = null;
       document.querySelectorAll('[data-day]').forEach(b => b.classList.toggle('on', b === btn));
-      render();
+      setExpanded(null);
     });
   });
 
