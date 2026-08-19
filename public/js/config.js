@@ -82,6 +82,10 @@ export const FORECAST_DAYS = 4;
 
 export const ATTRIBUTION = [
   { name: 'Open-Meteo', url: 'https://open-meteo.com/', text: 'תחזית: Open-Meteo (CC BY 4.0)' },
+  // תחנות המועדונים — ייחוס גלוי עם קישור. זו ההגינות המינימלית כלפי מי
+  // שמחזיק אנמומטר על החוף בכספו, וגם הפרסום הכי טוב שנוכל לתת לו.
+  { name: 'Surf Center', url: 'https://surfcenter.co.il/', text: 'מדידה בריף רף: מד הרוח של Surf Center אילת' },
+  { name: 'Surf Cycle', url: 'https://surfo.co.il/', text: 'מדידה בקריית ים: מד הרוח של Surf Cycle (סורפו)' },
 ];
 
 /** ייחוס חובה לפי סעיף 3 ברישיון השירות המטאורולוגי. לא להסיר. */

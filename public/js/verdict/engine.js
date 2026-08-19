@@ -143,6 +143,22 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
       level = cap(level, 'yellow');
       flags.push('obs_disagrees');
     }
+
+    // ⚠️ אי-הסכמה בכיוון היא סכנה נפרדת מאי-הסכמה במהירות, והיא יכולה
+    // להופיע לבדה: באילת נמדד 354° מול 33° חזוי כשהמהירויות תואמות —
+    // והמעלות האלה חוצות את הגבול בין רוח-צד לרוח-החוצה. כשהמכשיר שעל
+    // החוף מודד כיוון בגזרת סכנה והתחזית לא, מה שיש לנו הוא חוסר ידיעה
+    // על **הסימן הכי בטיחותי במסך** — וחוסר ידיעה מוריד דרגה, לעולם לא
+    // צובע אדום מנקודת מדידה בודדת ולעולם לא מעלה.
+    if (obs.dirDeg != null) {
+      const mCls = directionClass(obs.dirDeg, spot).cls;
+      const measuredDanger = mCls === 'offshore' || mCls === 'side_offshore';
+      const forecastDanger = dir.cls === 'offshore' || dir.cls === 'side_offshore';
+      if (measuredDanger && !forecastDanger) {
+        level = cap(level, 'yellow');
+        flags.push('obs_dir_disagrees');
+      }
+    }
   }
 
   if (spot.skill_floor === 'advanced' && level === 'green') flags.push('skill_advanced');

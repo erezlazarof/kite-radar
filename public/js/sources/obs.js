@@ -12,13 +12,32 @@ export async function fetchObs({ signal } = {}) {
 }
 
 /**
- * המדידה שמשרתת ספוט מסוים.
- * אילת אינה מגיעה מהשמ"ט — תחנת השמ"ט שם מצהירה על אנמומטר ומחזירה
- * ריק, והמקור היחיד הוא תחנת IUI. זה נתון ברג'יסטר ולא ענף כאן.
+ * המדידה שמשרתת ספוט מסוים — **בסדר עדיפות, עם נפילה מדורגת.**
+ *
+ * העדיפות היא נתון ברג'יסטר, לא ענף כאן: תחנת מועדון שעל החוף עצמו
+ * (`club`) גוברת על תחנה אזורית, והשרשרת נופלת הלאה כשמקור שותק —
+ * ריף רף: Surf Center (21 מ') → IUI (1.6 ק"מ); קריית ים: סורפו (1 ק"מ)
+ * → AFEQ של השמ"ט (4.6 ק"מ בעמק). כך אף ספוט אינו תלוי במקור יחיד,
+ * וזה גם מנגנון הגיבוי שסעיף 10 ברישיון השמ"ט דורש.
+ *
+ * מקור שנפל אינו מוצג "ריק" אלא פשוט מפנה את מקומו — והדגל ב-feed
+ * כבר אומר למעלה שמשהו מושבת.
  */
 export function obsForSpot(spot, payload) {
   if (!payload) return null;
   const ls = spot.live_stations || {};
+
+  // 1. תחנת מועדון על החוף עצמו — המקור הקרוב ביותר כשהוא חי
+  if (ls.club && payload.clubs?.[ls.club]) {
+    return {
+      ...payload.clubs[ls.club],
+      source: 'club',
+      stationName_he: ls.club_name_he || 'מד רוח על החוף',
+      distanceKm: ls.club_distance_km ?? null,
+      representative: true,
+      feed: payload.feed?.[ls.club_feed] || null,
+    };
+  }
 
   if (ls.meteotech === 'eilat_iui' && payload.eilat) {
     return {

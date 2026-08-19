@@ -22,7 +22,7 @@
    ========================================================================= */
 
 import { parseImsXml, feedHealth } from '../../public/js/sources/ims-parse.js';
-import { parseIsramar, parseMeteoTechEilat } from '../../public/js/sources/obs-parse.js';
+import { parseIsramar, parseMeteoTechEilat, parseAwnDevice, parseSurfoXml } from '../../public/js/sources/obs-parse.js';
 import { SITE_URL, UA_TOKEN } from '../../public/js/config.js';
 
 const UA = `${UA_TOKEN} (+${SITE_URL}) personal non-commercial`;
@@ -42,8 +42,29 @@ const SOURCES = {
     // ⚠️ היה HTTP במכוון, בהנחה שזה מה שהמקור מגיש. נמדד 19/8/2026:
     // השרת עונה גם ב-HTTPS, עם תעודה תקינה ואותו תוכן בדיוק. אין סיבה
     // למשוך נתון בטיחותי בערוץ פתוח כשהמקור מציע ערוץ סגור.
+    //
+    // מאז 19/8 זהו **הגיבוי** של אילת: המקור הראשי הוא מד הרוח של
+    // Surf Center על ריף רף עצמו (ראה awn_eilat). obsForSpot בלקוח
+    // נופל לכאן כשהראשי שותק.
     url: 'https://www.meteo-tech.co.il/eilat-yam/eilat_en.asp',
     as: 'latin1',
+  },
+  awn_eilat: {
+    // מד הרוח של מועדון Surf Center — 21 מטר מנקודת ריף רף ברג'יסטר,
+    // דגימה כל דקה. אומת פעמיים (19/8/2026) כאנמומטר אמיתי: ערכים
+    // רגעיים קופצניים מול ממוצע-10-דקות חלק, ותחנה שנייה 45 מ' משם
+    // שמחזירה ערכים קרובים-אך-שונים — שני ווידג'טים של תחזית היו זהים.
+    // ⚠️ API לא מתועד של Ambient Weather; ללא מפתח וללא רישיון פורמלי.
+    // המועדון מפרסם את התחנה מרצונו והקהילה מכירה אותה. ייחוס בפוטר.
+    url: 'https://lightning.ambientweather.net/devices?public.slug=c63d4150e752e5c87196ff289433d26e',
+    as: 'text',
+  },
+  surfo: {
+    // מד הרוח של מועדון Surf Cycle (סורפו) — חוף זבולון, קריית ים.
+    // XML כל דקה, כבר בקשר. אומת מול שתי תחנות שמ"ט באותה דקה.
+    // ⚠️ שעון ישראל עם שעון קיץ — לא UTC+2 הקבוע של השמ"ט.
+    url: 'https://surfo.co.il/wp-content/themes/vibes-child/inc/weather/data/windDirection.xml',
+    as: 'text',
   },
 };
 
@@ -69,6 +90,8 @@ export async function onRequestGet(context) {
     stations: {},
     marine: {},
     eilat: null,
+    // תחנות מועדונים — מפתח קבוע לכל תחנה, אליו מצביע הרג'יסטר
+    clubs: {},
     feed: {},
     errors: [],
   };
@@ -124,6 +147,45 @@ function applySource(name, text, body, now) {
       ok: ageMin <= 240, state: ageMin <= 120 ? 'fresh' : ageMin <= 240 ? 'stale' : 'dead',
       ageMin, note_he: ageMin > 120 ? `מדידת הגלים בת ${ageMin} דקות.` : null,
     };
+    return;
+  }
+
+  if (name === 'awn_eilat') {
+    const w = parseAwnDevice(text);
+    if (!w) {
+      body.feed.awn_eilat = { ok: false, state: 'down', ageMin: null,
+                             note_he: 'מד הרוח של Surf Center לא החזיר נתון קריא.' };
+      return;
+    }
+    const ageMin = Math.max(0, Math.round((now - w.tsMs) / 60000));
+    // קצב הדגימה דקה — סף הטריות בהתאם, הדוק מזה של השמ"ט
+    body.feed.awn_eilat = {
+      ok: ageMin <= 30, state: ageMin <= 10 ? 'fresh' : ageMin <= 30 ? 'stale' : 'dead',
+      ageMin, note_he: ageMin > 10 ? `מד הרוח בריף רף מאחר ב-${ageMin} דקות.` : null,
+    };
+    // ⚠️ הקריאה מתפרסמת רק כשההזנה חיה — אותו שער כמו בענף השמ"ט.
+    // ה-API של AWN ממשיך לענות גם כשהתחנה עצמה כבויה, עם lastData קפוא:
+    // בלי השער, קריאה בת שש שעות הייתה גוברת על תחנת גיבוי חיה, כי
+    // obsForSpot בלקוח בודק נוכחות מפתח. מקור מת מפנה את מקומו.
+    if (body.feed.awn_eilat.state !== 'dead') body.clubs.eilat_surfcenter = w;
+    return;
+  }
+
+  if (name === 'surfo') {
+    const w = parseSurfoXml(text);
+    if (!w) {
+      body.feed.surfo = { ok: false, state: 'down', ageMin: null,
+                          note_he: 'מד הרוח של סורפו לא החזיר נתון קריא.' };
+      return;
+    }
+    const ageMin = Math.max(0, Math.round((now - w.tsMs) / 60000));
+    body.feed.surfo = {
+      ok: ageMin <= 30, state: ageMin <= 10 ? 'fresh' : ageMin <= 30 ? 'stale' : 'dead',
+      ageMin, note_he: ageMin > 10 ? `מד הרוח בקריית ים מאחר ב-${ageMin} דקות.` : null,
+    };
+    // אותו שער כמו למעלה: וורדפרס ממשיך להגיש XML קפוא כשהתחנה מתה,
+    // וקריאה מתה אסור לה לגבור על תחנת שמ"ט חיה.
+    if (body.feed.surfo.state !== 'dead') body.clubs.surfo_kiryat_yam = w;
     return;
   }
 

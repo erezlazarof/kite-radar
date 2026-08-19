@@ -270,7 +270,11 @@
         "isramar": "hadera",
         "meteotech": null,
         "distance_km": 4.6,
-        "representative": false
+        "representative": false,
+        "club": "surfo_kiryat_yam",
+        "club_name_he": "מד הרוח של Surf Cycle — חוף זבולון",
+        "club_feed": "surfo",
+        "club_distance_km": 0.97
       },
       "models": {
         "force": [],
@@ -412,7 +416,11 @@
         "isramar": "hadera",
         "meteotech": null,
         "distance_km": 6.3,
-        "representative": false
+        "representative": false,
+        "club": "surfo_kiryat_yam",
+        "club_name_he": "מד הרוח של Surf Cycle — חוף זבולון",
+        "club_feed": "surfo",
+        "club_distance_km": 2.84
       },
       "models": {
         "force": [],
@@ -1943,7 +1951,11 @@
         "isramar": null,
         "meteotech": "eilat_iui",
         "distance_km": null,
-        "representative": true
+        "representative": true,
+        "club": "eilat_surfcenter",
+        "club_name_he": "מד הרוח של Surf Center — על חוף הקייט",
+        "club_feed": "awn_eilat",
+        "club_distance_km": 5.08
       },
       "models": {
         "force": [
@@ -2053,7 +2065,11 @@
         "isramar": null,
         "meteotech": "eilat_iui",
         "distance_km": null,
-        "representative": true
+        "representative": true,
+        "club": "eilat_surfcenter",
+        "club_name_he": "מד הרוח של Surf Center — על חוף הקייט",
+        "club_feed": "awn_eilat",
+        "club_distance_km": 0.02
       },
       "models": {
         "force": [

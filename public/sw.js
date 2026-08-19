@@ -18,7 +18,7 @@
    ימשיך להריץ קוד ישן גם אחרי push — וזו תקלה שקשה לאבחן מרחוק.
    ========================================================================= */
 
-const CACHE_V = 'kite-v4';
+const CACHE_V = 'kite-v5';
 const SHELL = `${CACHE_V}-shell`;
 const RUNTIME = `${CACHE_V}-runtime`;
 

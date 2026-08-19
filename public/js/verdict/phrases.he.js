@@ -33,6 +33,7 @@ export const FLAG_HE = {
   gusty:           { icon: '⚠', short: 'משבים', text: 'הרוח לא יציבה — פערי משב גדולים.', severity: 'critical' },
   model_spread:    { icon: '≈', short: 'מודלים חלוקים', text: 'מודלי התחזית חלוקים ביניהם.', severity: 'critical' },
   obs_disagrees:   { icon: '◆', short: 'מדידה חלוקה', text: 'התחנה מודדת משהו אחר ממה שהמודל חזה. כשאלה לא מסכימים, מה שיש לנו הוא חוסר ידיעה ולא תשובה אחרת.', severity: 'critical' },
+  obs_dir_disagrees: { icon: '◆', short: 'כיוון נמדד מסוכן', text: 'המדידה על החוף מראה רוח שנושבת החוצה, אל הים הפתוח — כיוון מסוכן יותר מהחזוי. לבדוק את הדגל בחוף לפני שנכנסים.', severity: 'critical' },
   stale:           { icon: '⏱', short: 'נתון ישן', text: 'הנתון לא טרי.', severity: 'critical' },
   unverified_spot: { icon: '◎', short: 'לא אומת', text: 'כיוון החוף כאן לא אומת בידי אדם — הוא נגזר ממפה או הוגדר ידנית. כיוון שגוי הופך רוח מסוכנת לרוח שנראית בטוחה, ולכן אין דירוג ירוק.', severity: 'critical' },
   skill_advanced:  { icon: '⚑', short: 'למתקדמים', text: 'ספוט למתקדמים בלבד.', severity: 'skip' },
@@ -132,7 +133,9 @@ export function buildCaveats(v, spot) {
     const m = v.measured;
     const sign = m.deltaKt > 0 ? 'יותר' : 'פחות';
     out.push(
-      `${m.stationName_he || 'התחנה'} מודדת ${n(m.speedKt)} קשר` +
+      // "נמדד ב..." ולא "X מודדת" — שם התחנה יכול להיות זכר ("מד הרוח
+      // של Surf Center") או נקבה ("תחנת חדרה"), והניסוח הסביל נכון לשניהם.
+      `נמדד ב${m.stationName_he || 'תחנה הקרובה'}: ${n(m.speedKt)} קשר` +
       (m.gustKt != null ? `, משב ${n(m.gustKt)}` : '') +
       (m.ageMin != null ? ` (לפני ${n(m.ageMin)} דקות` : '') +
       (m.distanceKm != null ? `, ${n(m.distanceKm)} ק״מ מהחוף)` : m.ageMin != null ? ')' : '') +

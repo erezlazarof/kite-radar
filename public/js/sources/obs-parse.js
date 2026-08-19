@@ -13,7 +13,12 @@
 import { MS_TO_KT, IMS_UTC_OFFSET_MIN } from './ims-parse.js';
 
 const round1 = v => Math.round(v * 10) / 10;
+// ⚠️ Number(null) === Number('') === Number(false) === 0 — מספר שנראה
+// אמיתי ולא נמדד מעולם. זו הפעם ה**שלישית** שהמלכודת הזו נתפסת בפרויקט
+// (טופס הוספת ספוט, decodeShare, וכאן): שדה JSON שהגיע null או תגית XML
+// ריקה חייבים ליפול לברירת המחדל, לא להפוך ל"0 קשר מצפון".
 const numOr = (v, d = null) => {
+  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return d;
   const n = Number(v);
   return Number.isFinite(n) ? n : d;
 };
@@ -125,4 +130,125 @@ export function eilatStampToMs(day, month, hh, mm, nowMs) {
   // יותר מיממה בעתיד ⇒ מדובר בשנה שעברה
   if (ts - nowMs > 86400000) ts = mk(y - 1);
   return ts;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ambient Weather Network — מד הרוח של Surf Center על ריף רף          */
+/* ------------------------------------------------------------------ */
+
+export const MPH_TO_KT = 0.868976;
+
+/**
+ * @param {object|string} json  תגובת lightning.ambientweather.net/devices
+ * @returns {{tsMs, speedKt, gustKt, dirDeg, tempC}|null}
+ *
+ * ⚠️ שתי בחירות שהן מהות, לא סגנון:
+ * 1. המהירות היא `windspdmph_avg10m` — ממוצע עשר דקות — ולא `windspeedmph`
+ *    הרגעי. הרגעי קופץ 11→21 קשר בין דקות (נמדד), והשמ"ט עצמו מדווח
+ *    ממוצע 10 דקות. מקור שמדווח אחרת היה משווה תפוחים לרעש.
+ * 2. היחידות הן **mph**, בלי דגל יחידות בתגובה. ההמרה כאן, פעם אחת,
+ *    ליד המקור — לא בתצוגה.
+ */
+export function parseAwnDevice(json) {
+  let d = json;
+  if (typeof d === 'string') {
+    try { d = JSON.parse(d); } catch { return null; }
+  }
+  const dev = Array.isArray(d) ? d[0] : d?.data?.[0] ?? d;
+  const L = dev?.lastData;
+  const tsMs = L ? numOr(L.dateutc) : null;
+  if (tsMs == null || tsMs <= 0) return null;
+
+  const speedMph = numOr(L.windspdmph_avg10m, numOr(L.windspeedmph));
+  const gustMph = numOr(L.windgustmph);
+  const dirDeg = numOr(L.winddir_avg10m, numOr(L.winddir));
+  if (speedMph == null || dirDeg == null) return null;
+  if (dirDeg < 0 || dirDeg > 360 || speedMph < 0 || speedMph > 120) return null;
+
+  const speedKt = round1(speedMph * MPH_TO_KT);
+  const gustKt = gustMph != null && gustMph >= speedMph ? round1(gustMph * MPH_TO_KT) : null;
+
+  return {
+    tsMs,   // epoch ms, UTC אמיתי — בלי מלכודת ההיסט של השמ"ט
+    speedKt,
+    gustKt,
+    dirDeg,
+    tempC: L.tempf != null ? round1((Number(L.tempf) - 32) * 5 / 9) : null,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Surf Cycle (סורפו) — חוף זבולון, קריית ים                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * ההיסט של שעון ישראל מ-UTC ברגע נתון, בדקות.
+ * Intl נושא את טבלת שעון הקיץ — אין כאן קריאת שעה נוכחית, ולכן זה
+ * עדיין מודול טהור: אותו קלט ייתן תמיד אותו פלט.
+ */
+export function israelOffsetMin(utcMs) {
+  // ⚠️ הפורמט נותן דיוק של דקה. חישוב על רגע עם שניות (hh:59:45) היה
+  // מעגל את ההיסט ל-179 דקות במקום 180 ומזיז את הקריאה דקה קדימה —
+  // ובגבול שעה, אל שעת התחזית הלא נכונה. לכן קודם מקצצים לדקה עגולה.
+  utcMs = Math.floor(utcMs / 60000) * 60000;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jerusalem', hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+  }).formatToParts(new Date(utcMs));
+  const g = t => Number(parts.find(p => p.type === t)?.value);
+  const wall = Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'));
+  return Math.round((wall - utcMs) / 60000);
+}
+
+/**
+ * "19/08/2026,14:45:00" → מילישניות UTC.
+ *
+ * ⚠️ שלוש מלכודות, כולן שונות מהשמ"ט:
+ * 1. השעון הוא **שעון ישראל עם שעון קיץ** — UTC+3 בקיץ, UTC+2 בחורף.
+ *    השמ"ט הוא UTC+2 קבוע. פירוש לפי כלל השמ"ט מזיז כל קריאת קיץ בשעה.
+ * 2. הפורמט הוא יום-קודם (DD/MM). `new Date()` היה קורא 05/08 כ-8 במאי.
+ * 3. ההמרה איטרטיבית: ההיסט תלוי ברגע, והרגע תלוי בהיסט. שתי איטרציות
+ *    מתכנסות תמיד; ההבדל מופיע רק בשעת מעבר השעון, פעמיים בשנה.
+ */
+export function surfoTimeToMs(dateTimeStr) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4}),\s*(\d{2}):(\d{2}):(\d{2})$/.exec(String(dateTimeStr || '').trim());
+  if (!m) return null;
+  const [, day, mo, y, hh, mi, ss] = m.map(Number);
+  const wallUtc = Date.UTC(y, mo - 1, day, hh, mi, ss);
+  let ts = wallUtc - israelOffsetMin(wallUtc) * 60000;
+  ts = wallUtc - israelOffsetMin(ts) * 60000;
+  return ts;
+}
+
+/**
+ * @param {string} xml  תוכן windDirection.xml
+ * @returns {{tsMs, speedKt, gustKt, dirDeg, tempC}|null}
+ *
+ * היחידות כבר קשר — מוכח מהדף עצמו (הציר מסומן "Wind Speed (Knots)"
+ * והטבלה מציגה "8 kt"). **אין להוסיף המרה** — המרה כפולה הייתה מציגה
+ * חצי מהרוח האמיתית, וחצי מהרוח הוא ההבדל בין "אין רוח" ל"יש רוח".
+ */
+export function parseSurfoXml(xml) {
+  const src = String(xml || '');
+  const tag = n => {
+    const m = new RegExp(`<${n}>([^<]*)</${n}>`).exec(src);
+    return m ? m[1].trim() : null;
+  };
+
+  const speedKt = numOr(tag('AverageWind'));
+  const gustKt = numOr(tag('WindGust'));
+  const dirDeg = numOr(tag('Direction'));
+  if (speedKt == null || dirDeg == null) return null;
+  if (dirDeg < 0 || dirDeg > 360 || speedKt < 0 || speedKt > 80) return null;
+
+  const tsMs = surfoTimeToMs(tag('DateTime'));
+  if (tsMs == null) return null;
+
+  return {
+    tsMs,
+    speedKt: round1(speedKt),
+    gustKt: gustKt != null && gustKt >= speedKt ? round1(gustKt) : null,
+    dirDeg,
+    tempC: numOr(tag('Temp')),
+  };
 }

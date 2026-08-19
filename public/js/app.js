@@ -302,12 +302,17 @@ function updateStatus(scored) {
   if (scored) txt = `${good ? `${good} ספוטים עם רוח · ` : ''}${txt}`;
 
   // ניטור הפסקות בהזנה — התחייבות חוזית ברישיון השמ"ט, ולא קישוט.
+  // ⚠️ הבאנר הגלובלי נשמר להזנה הרוחבית: השמ"ט משרת 22 ספוטים, ונפילה
+  // שלו היא באמת "מדידה חיה לא זמינה". תחנת מועדון בודדת שירדה מטופלת
+  // בשרשרת הנפילה של הכרטיס עצמו — להכריז עליה גלובלית היה מלמד את
+  // המשתמשים שהבאנר צועק גם כשהכול אצלם עובד, ובאנר שמשקרים בו מתעלמים
+  // ממנו ביום שבו הוא נכון.
   const feed = state.obs?.payload?.feed || {};
-  const down = Object.entries(feed).filter(([, f]) => f && f.ok === false).map(([k]) => k);
-  if (down.length) txt = `מדידה חיה לא זמינה · ${txt}`;
+  const imsDown = feed.ims && feed.ims.ok === false;
+  if (imsDown) txt = `מדידה חיה לא זמינה · ${txt}`;
 
   el.textContent = txt;
-  el.className = 'status' + (fc.restored || down.length || !navigator.onLine ? ' status-warn' : '');
+  el.className = 'status' + (fc.restored || imsDown || !navigator.onLine ? ' status-warn' : '');
 }
 
 /**
