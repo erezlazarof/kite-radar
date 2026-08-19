@@ -23,8 +23,9 @@
 
 import { parseImsXml, feedHealth } from '../../public/js/sources/ims-parse.js';
 import { parseIsramar, parseMeteoTechEilat } from '../../public/js/sources/obs-parse.js';
+import { SITE_URL, UA_TOKEN } from '../../public/js/config.js';
 
-const UA = 'kite-radar/1.0 (+https://kite-radar.pages.dev) personal non-commercial';
+const UA = `${UA_TOKEN} (+${SITE_URL}) personal non-commercial`;
 
 const SOURCES = {
   ims: {

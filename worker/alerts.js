@@ -31,7 +31,7 @@ import { compassHe, DIR_CLASS_HE } from '../public/js/verdict/bands.js';
 import { FLAG_HE, n } from '../public/js/verdict/phrases.he.js';
 import { fetchAllSpots } from '../public/js/sources/openmeteo.js';
 import { obsForSpot, compareToForecast, obsAgeMin } from '../public/js/sources/obs.js';
-import { DISCLAIMER } from '../public/js/config.js';
+import { DISCLAIMER, SITE_URL } from '../public/js/config.js';
 
 import {
   esc, ltr, toTelegramHtml, timingSafeEqualStr,
@@ -46,7 +46,7 @@ import {
   encodeSent, decodeSent, pairKey, DEFAULT_MIN_KT,
 } from './subs.js';
 
-export const SITE_FALLBACK = 'https://kite-radar.pages.dev';
+export const SITE_FALLBACK = SITE_URL;
 
 /** עד לאן קדימה מסתכלת התראה. 36 שעות = היום ומחר, לא "השבוע". */
 export const WINDOW_AHEAD_MS = 36 * 3600 * 1000;

@@ -62,6 +62,20 @@ export const FEATURES = {
  */
 export const GITHUB = { owner: 'erezlazarof', repo: 'kite-radar' };
 
+/**
+ * הכתובת הציבורית של האתר. **מקור אמת יחיד** — היא נצרכת בשלושה מקומות
+ * שנפרסים בנפרד ולכן נוטים להיפרד זה מזה:
+ *   1. ה-user-agent שהפונקציה מציגה לשמ"ט, לאיסראמר ולמטאו-טק. זו הדרך
+ *      היחידה שלהם ליצור קשר אם משהו מפריע להם, ולכן היא חייבת להיות נכונה.
+ *   2. הקישור שבוט הטלגרם שולח בכל הודעה.
+ *   3. קישורי השיתוף של "הוסף ספוט משלך".
+ *
+ * שם הריפו (`kite-radar`) ושם הפרויקט ב-Cloudflare Pages (`yeshruach`) הם
+ * שני דברים נפרדים — התת-דומיין נגזר משם הפרויקט, לא מהריפו.
+ */
+export const SITE_URL = 'https://yeshruach.pages.dev';
+export const UA_TOKEN = 'yeshruach/1.0';
+
 export const REFRESH_MS = { obs: 5 * 60 * 1000, forecast: 15 * 60 * 1000 };
 
 export const FORECAST_DAYS = 4;

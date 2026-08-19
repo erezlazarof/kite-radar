@@ -626,3 +626,32 @@ test('every card expansion goes through setExpanded — so the model strip alway
   assert.match(fn[0], /state\.expanded\s*=/, 'the single assignment must be the one inside setExpanded');
   assert.match(fn[0], /loadModels\(/, 'setExpanded must be able to pull the model comparison');
 });
+
+test('the public URL lives in config.js only — three deploy targets must not drift apart', async () => {
+  // ⚠️ הכתובת נצרכת ב-functions/ (user-agent מול השמ"ט), ב-worker/ (הקישור
+  // בכל הודעת טלגרם) וב-public/ (קישורי שיתוף). שלושתם נפרסים בנפרד, ולכן
+  // כתובת מוקשחת באחד מהם מתיישנת בשקט ומפנה אנשים לאתר שלא קיים.
+  const { readdirSync, statSync } = await import('node:fs');
+  const root = new URL('../', import.meta.url);
+
+  const files = [];
+  (function walk(rel) {
+    for (const e of readdirSync(new URL(rel, root), { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name === '.git' || e.name === '.claude') continue;
+      const p = `${rel}${e.name}`;
+      if (e.isDirectory()) walk(`${p}/`);
+      else if (/\.(js|json|webmanifest|html)$/.test(e.name)) files.push(p);
+    }
+  })('');
+
+  const offenders = [];
+  for (const f of files) {
+    // הבדיקות עצמן מעבירות siteUrl במפורש — זו בדיוק ההתנהגות שהן בודקות
+    if (f.startsWith('test/') || f === 'public/js/config.js') continue;
+    const src = readFileSync(new URL(f, root), 'utf8');
+    if (/https:\/\/[a-z0-9-]+\.pages\.dev/.test(src)) offenders.push(f);
+  }
+
+  assert.deepEqual(offenders, [],
+    'these files hardcode a pages.dev URL — import SITE_URL from config.js instead');
+});
