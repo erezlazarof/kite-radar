@@ -1007,3 +1007,30 @@ body.busy .status::after {
 .m-vs.up   .num { color: var(--go-ink); }
 .m-vs.down .num { color: var(--marginal-ink); }
 .m-vs.same .num { color: var(--text-2); }
+
+/* ============================ השוואת מודלים ============================ */
+/* ההודעה היא הפער, לא שלושת המספרים. */
+
+.mstrip { margin-block: 4px 2px; }
+.mstrip-svg { display: block; inline-size: 100%; overflow: visible; }
+.mstrip-empty, .d-muted { color: var(--text-3); font-size: 12.5px; margin: 0; }
+
+.mstrip .ms-axis { stroke: var(--border); stroke-width: 1; }
+.mstrip .ms-tick { stroke: var(--border-strong); stroke-width: 1; opacity: .5; }
+.mstrip .ms-tick-label { fill: var(--text-3); font: 600 8.5px var(--font); }
+
+.mstrip .ms-span            { stroke: none; }
+.mstrip .ms-span--agree     { fill: color-mix(in srgb, var(--go) 30%, transparent); }
+.mstrip .ms-span--mild      { fill: color-mix(in srgb, var(--marginal) 34%, transparent); }
+.mstrip .ms-span--split     { fill: color-mix(in srgb, var(--no) 30%, transparent); }
+
+.mstrip .ms-best { stroke: var(--text); stroke-width: 1.6; opacity: .55; }
+.mstrip .ms-dot circle { fill: var(--surface); stroke: var(--text-2); stroke-width: 1.6; }
+.mstrip .ms-dot-label  { fill: var(--text-2); font: 800 9px var(--font); }
+
+.mstrip-sum { margin: 6px 0 0; font-size: 12.5px; font-weight: 700; }
+.mstrip-sum.ms-agree { color: var(--go-ink); }
+.mstrip-sum.ms-mild  { color: var(--marginal-ink); }
+.mstrip-sum.ms-split { color: var(--no-ink); }
+.mstrip-sum.ms-none  { color: var(--text-3); font-weight: 600; }
+.mstrip-note { margin: 5px 0 0; font-size: 11.5px; color: var(--text-3); line-height: 1.5; }

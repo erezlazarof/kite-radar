@@ -2,9 +2,9 @@
    רדאר קייט — הרכבה, מחזור הרינדור והרענון
    ========================================================================= */
 
-import { FEATURES, REFRESH_MS, ATTRIBUTION, IMS_ATTRIBUTION, DISCLAIMER } from './config.js';
+import { FEATURES, REFRESH_MS, ATTRIBUTION, IMS_ATTRIBUTION, DISCLAIMER, MODELS, TTL_MIN } from './config.js';
 import { state, savePrefs, ageMin, withFallback } from './store.js';
-import { fetchAllSpots } from './sources/openmeteo.js';
+import { fetchAllSpots, fetchModels, modelsForSpot } from './sources/openmeteo.js';
 import { fetchObs, obsForSpot, compareToForecast, obsAgeMin } from './sources/obs.js';
 import { scoreSpot } from './verdict/engine.js';
 import { israelDateParts } from './verdict/calendar.js';
@@ -130,7 +130,14 @@ function render() {
 
   const one = ({ spot, v, grid, hours, nowHour }) => {
     const open = state.expanded === spot.id;
-    return renderCard(spot, v, { hours, nowHour }) + (open ? renderDetail(spot, v, { grid, prefs: state.prefs }) : '');
+    const detail = open
+      ? renderDetail(spot, v, {
+          grid, prefs: state.prefs,
+          // undefined = אל תציג את המדור כלל; null = טוען; אובייקט = יש נתונים
+          models: FEATURES.models ? (state.models[spot.id]?.data ?? null) : undefined,
+        })
+      : '';
+    return renderCard(spot, v, { hours, nowHour }) + detail;
   };
 
   host.classList.toggle('grouped', state.region === 'all');
@@ -263,6 +270,31 @@ function renderFooter() {
   $('#attribution').innerHTML = links + (FEATURES.ims_live ? `<br>${esc(IMS_ATTRIBUTION)}` : '');
 }
 
+/**
+ * ריבוי מודלים נמשך רק בפתיחת כרטיס, ובכוונה: הוא משלש את משקל התגובה
+ * עבור מידע שאי אפשר לראות עד שלוחצים. במסך הראשי זו הייתה מכסה
+ * וסוללה שנשרפות על כלום.
+ */
+async function loadModels(spotId) {
+  if (!FEATURES.models) return;
+  const cached = state.models[spotId];
+  if (cached && ageMin(cached.fetchedAt) < TTL_MIN.models) return;
+
+  const spot = state.spots.find(s => s.id === spotId);
+  if (!spot) return;
+  const ids = modelsForSpot(spot, Object.keys(MODELS));
+
+  try {
+    const data = await fetchModels(spot, ids);
+    state.models[spotId] = { data, fetchedAt: Date.now() };
+  } catch (err) {
+    // כישלון בהשוואה לא מוחק את פסק הדין מהמסך — הוא רק משאיר את
+    // המדור ריק, ואומר את זה.
+    state.models[spotId] = { data: {}, fetchedAt: Date.now(), error: String(err.message || err) };
+  }
+  if (state.expanded === spotId) render();
+}
+
 /* ---------------- אינטראקציה ---------------- */
 
 function bindUI() {
@@ -272,6 +304,7 @@ function bindUI() {
     const id = card.dataset.spot;
     state.expanded = state.expanded === id ? null : id;
     render();
+    if (state.expanded) loadModels(state.expanded);
   });
 
   $('#cards').addEventListener('keydown', e => {
@@ -281,6 +314,7 @@ function bindUI() {
     e.preventDefault();
     state.expanded = state.expanded === card.dataset.spot ? null : card.dataset.spot;
     render();
+    if (state.expanded) loadModels(state.expanded);
   });
 
   $('#regions').addEventListener('click', e => {

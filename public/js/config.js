@@ -28,7 +28,7 @@ export const FEATURES = {
   /** מדידה חיה מהשירות המטאורולוגי. ניתן לכיבוי בשורה אחת אם תנאי השימוש ישתנו. */
   ims_live: true,
   marine: false,       // שלב 8
-  models: false,       // שלב 3
+  models: true,
   telegram: false,     // שלב 7
 };
 

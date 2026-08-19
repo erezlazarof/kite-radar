@@ -9,6 +9,7 @@ import { compassHe, DIR_CLASS_HE, matchQuiver, kiteRange } from '../verdict/band
 import { FLAG_HE, n } from '../verdict/phrases.he.js';
 import { renderSparklineSVG } from './sparkline.js';
 import { renderCompass } from './compass.js';
+import { renderModelStrip, modelMeanKt } from './modelstrip.js';
 
 export const LEVEL_META = {
   green:   { cls: 'lv-green',   icon: '🟢', label: 'יש רוח' },
@@ -186,6 +187,24 @@ export function renderDetail(spot, v, extra = {}) {
 
   if (extra.grid) {
     rows.push(`<p class="d-src">התחזית היא לנקודת רשת במרחק <span dir="ltr">${extra.grid.distanceKm.toFixed(1)}</span> ק"מ מהחוף, ברזולוציה של כ-7 ק"מ.</p>`);
+  }
+
+  // ----- השוואת מודלים -----
+  if (extra.models !== undefined && v.window) {
+    rows.push('<h3 class="d-h">מה המודלים אומרים</h3>');
+    if (extra.models === null) {
+      rows.push('<p class="d-line d-muted">טוען השוואה…</p>');
+    } else {
+      const points = {};
+      for (const [id, hrs] of Object.entries(extra.models)) {
+        const mean = modelMeanKt(hrs, v.window, v.day ?? 0);
+        if (mean != null) points[id] = mean;
+      }
+      rows.push(renderModelStrip(points, v.window.meanKt, {
+        excluded: spot.models?.exclude || [],
+        reason_he: spot.models?.reason_he,
+      }));
+    }
   }
 
   // ----- שכבת התכנון. מופרדת במכוון: היא אישית, והיא לא חלק מפסק הדין -----
