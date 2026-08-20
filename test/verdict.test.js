@@ -526,12 +526,45 @@ test('the service worker precaches every module the app imports', async () => {
     'a module that is imported but not precached breaks the app offline, silently');
 });
 
-test('the cache version is bumped whenever the shell list changes', () => {
-  // שער רך: אם מישהו מוסיף קובץ בלי להגדיל CACHE_V, מותקנים ימשיכו
-  // להריץ קוד ישן אחרי push — תקלה שקשה מאוד לאבחן מרחוק.
+test('the cache version has a shape that can be bumped, and old caches are purged', () => {
+  // שער הצורה בלבד: שהמספר ניתן להגדלה ושהמטמון הישן אכן מתפנה.
+  // מי שתופס שינוי תוכן בלי הגדלה הוא הגיבוב שבבדיקה הבאה.
   const sw = readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
   assert.match(sw, /const CACHE_V = 'kite-v\d+'/);
   assert.match(sw, /caches\.delete/, 'old caches must be purged on activate');
+});
+
+test('a shell file that changes content without a version bump is caught', async () => {
+  // הבדיקה שמעל תופסת רק את *צורת* המספר. עריכה בתוך קובץ שלד
+  // קיים — שורה ב-app.js, כלל ב-styles.css — עוברת אותה בשקט,
+  // וזה המקרה הנפוץ במיוחד. כאן מגבבים את השלד עצמו
+  // ומשווים לעוגן שנרשם ליד CACHE_V.
+  const { createHash } = await import('node:crypto');
+  const sw = readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
+  const listed = [...(/const SHELL_FILES = \[([\s\S]*?)\];/.exec(sw)?.[1] || '')
+    .matchAll(/'([^']+)'/g)].map(m => m[1]);
+  assert.ok(listed.length, 'SHELL_FILES לא נקרא מ-sw.js — הביטוי הרגולרי מפגר אחרי הקובץ');
+
+  const hash = createHash('sha256');
+  for (const f of listed) {
+    // הנתיב נכנס לגיבוב לפני התוכן, כך שגם שינוי שם, סדר או הסרה
+    // נתפסים — ולא רק עריכה בתוך קובץ. './' הוא מה שהשרת מגיש
+    // כ-index.html, ולכן הוא נפתר לשם.
+    hash.update(f);
+    const rel = (f.endsWith('/') ? `${f}index.html` : f).replace(/^\.\//, '');
+    const bytes = readFileSync(new URL(`../public/${rel}`, import.meta.url));
+    // CR שלפני LF מנוטרל: git מוציא בצ'ק-אאוט CRLF בחלונות ו-LF
+    // בלינוקס, ובלי הניטרול הגיבוב היה נופל לפי מערכת ההפעלה
+    // ולא לפי שינוי אמיתי. על אייקונים זו פעולה דטרמיניסטית ולכן לא מזיקה.
+    hash.update(bytes.filter((b, i) => !(b === 0x0d && bytes[i + 1] === 0x0a)));
+  }
+  const computed = hash.digest('hex').slice(0, 8);
+  const recorded = /const SHELL_HASH = '([0-9a-f]{8})'/.exec(sw)?.[1];
+
+  assert.equal(recorded, computed,
+    `שלד האפליקציה השתנה. הגיבוב החדש הוא ${computed} — ב-public/sw.js לרשום ` +
+    `אותו ב-SHELL_HASH **וגם** להגדיל את CACHE_V (עכשיו ${/const CACHE_V = '([^']+)'/.exec(sw)?.[1]}). ` +
+    `רק עדכון של העוגן לבד משתיק את הבדיקה ומשאיר את המותקנים על הקוד הישן.`);
 });
 
 test('every card is a deep-link target — alerts link to a specific beach', async () => {
