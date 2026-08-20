@@ -1116,6 +1116,9 @@ body.busy .status::after {
 .num-src {
   margin: 1px 0 0; font-size: 11px; line-height: 1.45; color: var(--text-3);
 }
+/* תחנה שאינה מייצגת את החוף — המרחק נאמר חזק יותר, כי המספר הגדול
+   מעליו נמדד במקום אחר. זה סייג, לא אזהרה: אין כאן סכנה, יש הקשר. */
+.num-src.is-far { color: var(--text-2); font-weight: 600; }
 .lv-blocked .nums, .lv-unknown .nums { opacity: .72; }
 
 /* ⚠️ נמדד ב-375 (אייפון): כל שורות המספרים נחתכו. תקציב הרוחב שם הוא

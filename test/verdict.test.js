@@ -728,12 +728,15 @@ test('מדידה ייצוגית וטרייה היא המספר הגדול בכר
   assert.equal(v.window.meanKt, 17, 'החלון עצמו לא זז — רק מי מוצג גדול');
 });
 
-test('תחנה שאינה מייצגת את החוף לעולם לא מובילה', () => {
-  // תחנה אזורית שמונה קילומטרים פנימה אינה האמת על החוף, וגודל הגופן
-  // אינו המקום להתווכח על כך. representative הוא נתון ברג'יסטר.
-  const v = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
-  assert.equal(v.lead, 'forecast');
-  assert.ok(v.measured, 'היא עדיין מוצגת — היא פשוט לא מובילה');
+test('ייצוגיות התחנה אינה מכריעה מי מוביל', () => {
+  // ⚠️ היה הפוך עד 20/8, ונפל בהכרעת ארז: מה שנמדד בפועל גדול
+  // מהתחזית. הייצוגיות לא נעלמה — היא עברה מהמנוע לתצוגה, כמרחק
+  // שנכתב בכרטיס ליד שם התחנה. ראה הבדיקה על המרחק למטה.
+  const near = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ representative: true }), NOON_IL, {}, 0);
+  const far  = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
+  assert.equal(near.lead, 'measured');
+  assert.equal(far.lead, 'measured');
+  assert.ok(far.measured, 'והיא עדיין נושאת את כל שדות המקור');
 });
 
 test('סף הטריות נגזר מקצב המקור, ונבדק משני צדיו', async () => {
@@ -780,39 +783,66 @@ test('מדידה בת אפס דקות היא "הרגע", לא "לפני 0 דק׳
   assert.equal(agoHe(undefined), '');
 });
 
-test('בכרטיס אדום פסק הדין מוביל, לא המדידה', () => {
-  // מספר מדוד גדול על כרטיס "לא ללכת" נקרא כעידוד — בדיוק כמו שכבת
-  // התכנון ששותקת שם. הרוח הנמדדת חזקה, והתשובה עדיין "לא".
+test('⚠️ מה שנמדד גדול מהתחזית — גם באדום', () => {
+  // הכרעת ארז, 20/8. הגרסה הראשונה הורידה את המדידה לשורה השנייה
+  // בכרטיס אדום, מחשש שמספר גדול ייקרא כעידוד. זה נפל: הכרטיס אדום,
+  // התג אומר "נמדד", והמספר הוא מה שקורה בפועל. מה שהיה מבלבל הוא
+  // דווקא כרטיס שמזיז את המספרים שלו לפי מצב הרוח.
   const v = scoreSpot(LEAD_SPOT(), fc({ kt: 8, gust: 10, dir: 310 }),
     obsOf({ speedKt: 22, forecastAtObsKt: 8 }), NOON_IL, {}, 0);
-  assert.equal(v.level, 'red');
-  assert.equal(v.lead, 'forecast');
+  assert.equal(v.level, 'red', 'הדרגה לא זזה — הרוח החזויה 8 קשר');
+  assert.equal(v.lead, 'measured');
   assert.ok(v.flags.includes('obs_disagrees'), 'הפער עדיין מרים דגל');
+});
+
+test('גם תחנה שאינה מייצגת מובילה — אבל המרחק נאמר בכרטיס', async () => {
+  // ⚠️ זה הסייג היחיד שנשאר מ-representative, והוא עבר מהמנוע לתצוגה:
+  // מדידה מתחנה עשרה קילומטרים פנימה עדיין מובילה, אבל הכרטיס אומר
+  // כמה רחוק. תחנה ביתית בגוש דן הראתה רבע מהרוח האמיתית — מספר כזה
+  // בלי מרחק הוא שקר שנראה כמו עובדה.
+  const { renderCard } = await import('../public/js/ui/card.js');
+  const s = LEAD_SPOT();
+  const v = scoreSpot(s, GREEN_FC(), obsOf({ representative: false, distanceKm: 9.9 }), NOON_IL, {}, 0);
+  assert.equal(v.lead, 'measured');
+  const html = renderCard(s, v, { model: 'best_match' });
+  assert.match(html, /<p class="num-src is-far">[\s\S]*?9\.9 ק״מ מהחוף/,
+    'המרחק נאמר במילים — "מהחוף", ולא מספר ערום');
+
+  // וכשהתחנה כן על החוף — בלי הסייג, כי אין מה לסייג
+  const near = scoreSpot(s, GREEN_FC(), obsOf({ representative: true, distanceKm: 0.02 }), NOON_IL, {}, 0);
+  const nearHtml = renderCard(s, near, { model: 'best_match' });
+  assert.match(nearHtml, /<p class="num-src">/);
+  assert.doesNotMatch(nearHtml, /מהחוף/);
 });
 
 test('כרטיס אסור וכרטיס בלי נתונים נושאים lead תמיד', () => {
   const blocked = scoreSpot(spot('tel-aviv'), GREEN_FC(), obsOf(),
     Date.UTC(2026, 6, 18, 8), {}, 0);
-  assert.equal(blocked.lead, 'forecast');
+  assert.equal(blocked.lead, 'forecast', 'ב-blocked אין measured בכלל');
   const unknown = scoreSpot(LEAD_SPOT(), { hours: [], ageMin: 5 }, obsOf(), NOON_IL, {}, 0);
   assert.equal(unknown.level, 'unknown');
   assert.equal(unknown.lead, 'forecast');
 });
 
-test('מחוץ לשעות הגלישה השאלה היא "מתי" — והחלון עונה עליה', () => {
+test('שעת היום אינה משנה מי מוביל — רק טריות המדידה', () => {
+  // סייג "חלון הגלישה" נפל יחד עם השאר: הוא היה שיקול טון. מדידה
+  // טרייה ב-21:00 היא עדיין מה שקורה עכשיו.
   const day = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NOON_IL, {}, 0);
   const night = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NIGHT_IL, {}, 0);
   assert.equal(day.lead, 'measured');
-  assert.equal(night.lead, 'forecast');
+  assert.equal(night.lead, 'measured');
 });
 
 test('⚠️ חוק ברזל 5 — ההובלה אינה נוגעת בפסק הדין', () => {
-  // הבדיקה המרכזית של השינוי הזה. שני פסקי דין שנבדלים אך ורק בתנאי
-  // ההובלה חייבים להיות זהים בכל מה שנוגע לבטיחות: דרגה, ניקוד, דגלים
-  // ורכיבים. אם מישהו יקשור אי פעם את leadSource לדירוג, המדידה תתחיל
-  // לשדרג כרטיסים — וזה בדיוק מה שהחוק אוסר.
-  const leads = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NOON_IL, {}, 0);
-  const trails = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
+  // הבדיקה המרכזית. שני פסקי דין שנבדלים אך ורק בתנאי ההובלה חייבים
+  // להיות זהים בכל מה שנוגע לבטיחות: דרגה, ניקוד, דגלים ורכיבים.
+  // אם מישהו יקשור אי פעם את leadSource לדירוג, המדידה תתחיל לשדרג
+  // כרטיסים — וזה בדיוק מה שהחוק אוסר.
+  //
+  // הזוג נבנה מהגיל בלבד: הוא מזיז את ההובלה ואינו נוגע בשום דגל,
+  // כי הפער מול התחזית זהה בשניהם.
+  const leads = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ ageMin: 3 }), NOON_IL, {}, 0);
+  const trails = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ ageMin: 300 }), NOON_IL, {}, 0);
 
   assert.equal(leads.lead, 'measured');
   assert.equal(trails.lead, 'forecast');
@@ -871,7 +901,8 @@ test('כשהמדידה מובילה — היא המספר הגדול, והתחז
 test('כשהתחזית מובילה — אותו מבנה בדיוק, הפוך', async () => {
   const { renderCard } = await import('../public/js/ui/card.js');
   const s = LEAD_SPOT();
-  const v = scoreSpot(s, GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
+  // התחזית מובילה רק כשהמדידה כבר אינה "עכשיו" — זה התנאי היחיד שנשאר
+  const v = scoreSpot(s, GREEN_FC(), obsOf({ ageMin: 300 }), NOON_IL, {}, 0);
   const html = renderCard(s, v, { model: 'ecmwf_ifs025' });
 
   assert.match(html, /<div class="nums" data-lead="forecast">/);

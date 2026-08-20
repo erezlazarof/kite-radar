@@ -145,7 +145,19 @@ function numberRows(v, extra) {
     when: agoHe(m.ageMin) || 'עכשיו',
   }) : '';
 
-  const src = m ? `<p class="num-src">${heText(m.stationName_he || 'מד רוח על החוף')}${
+  // ⚠️ המרחק אינו קישוט. מרגע שגם תחנה שאינה על החוף עצמו מובילה
+  // בכרטיס (הכרעת ארז, 20/8), הגולש חייב לדעת שהמספר הגדול נמדד
+  // עשרה קילומטרים פנימה ולא ברגליים שלו. תחנה ביתית בגוש דן הראתה
+  // רבע מהרוח האמיתית — בלי המרחק, מספר כזה הוא שקר שנראה כמו עובדה.
+  // ⚠️ `representative` הוא נתון ברג'יסטר שאומר אם התחנה מייצגת את
+  // החוף הזה. הוא כבר לא מכריע מי מוביל, אבל הוא עדיין נכון — ולכן
+  // הוא נאמר במילים: "12 ק״מ **מהחוף**" ולא "12 ק״מ" סתם. תחנה
+  // ביתית בגוש דן הראתה רבע מהרוח האמיתית; מספר גדול בלי הסייג הזה
+  // הוא שקר שנראה כמו עובדה.
+  const far = m && m.representative !== true && distHe(m.distanceKm);
+  const src = m ? `<p class="num-src${far ? ' is-far' : ''}">${
+    heText(m.stationName_he || 'מד רוח על החוף')}${
+    distHe(m.distanceKm) ? ` · ${distHe(m.distanceKm)}${far ? ' מהחוף' : ''}` : ''}${
     clockHe(m.tsMs) ? ` · <span dir="ltr">${esc(clockHe(m.tsMs))}</span>` : ''}</p>` : '';
 
   return `<div class="nums" data-lead="${leadMeasured ? 'measured' : 'forecast'}">
