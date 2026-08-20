@@ -1061,30 +1061,67 @@ body.busy .status::after {
 .m-vs.down .num { color: var(--marginal-ink); }
 .m-vs.same .num { color: var(--text-2); }
 
-/* ======================== מקור הנתון ומועד המדידה ========================
-   התווית שמעל המספר הגדול. שני המספרים בכרטיס נכונים והם דברים שונים,
-   ומה ששבר את האמון היה שהכרטיס לא אמר איזה מהם איזה. השורה הזו שקטה
-   בכוונה — היא לא מתחרה במספר, היא רק מונעת ממנו להיקרא כמשהו אחר. */
+/* ======================== שתי שורות המספרים ========================
+   ⚠️ הגרסה הראשונה שמה "תחזית" בגופן 11.5 אפור חיוור **מעל** מספר של
+   38 פיקסלים מודגש. התווית הייתה שם ואיש לא קרא אותה — העין קופצת
+   למספר. ארז ניסח את זה מדויק: "לא בדיוק ברור מה התחזית ומה נמדד".
 
-.src-line {
-  display: flex; align-items: center; gap: 6px;
-  margin: 8px 0 -2px; min-inline-size: 0;
-  font-size: 11.5px; color: var(--text-3); line-height: 1.3;
+   מה שפותר את זה אינו תווית גדולה יותר אלא **מבנה זהה לשני המספרים**:
+   כל אחד בשורה משלו, עם תג בגודל קבוע צמוד אליו ומוסמך זמן בקצה.
+   ההבדל ביניהם נקרא מהזמן — חלון שעות מול "לפני N דקות" — ולא מניסוח. */
+
+.nums { display: flex; flex-direction: column; gap: 5px; min-inline-size: 0; flex: 1 1 auto; }
+
+.num-row { display: flex; align-items: baseline; gap: 7px; min-inline-size: 0; }
+
+.num-tag {
+  flex: 0 0 auto; align-self: center;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  /* ⚠️ רוחב זהה לשני התגים, ולא רק גופן זהה. בלעדיו "נמדד" רחב
+     ב-7 פיקסלים מ"תחזית", שני המספרים מתחילים במקומות שונים, והעין
+     מפסיקה לקרוא אותם כשני מופעים של אותו דבר. נמדד, לא הוערך. */
+  min-inline-size: 54px;
+  font-size: 11px; font-weight: 800; letter-spacing: .01em;
+  padding: 3px 8px; border-radius: 6px;
+  background: var(--surface-3); color: var(--text-2);
+  border: 1px solid var(--border);
+  white-space: nowrap;
 }
-.src-kind {
-  font-weight: 800; color: var(--text-2);
-  letter-spacing: .01em; flex: 0 0 auto;
+/* המדידה היא הדבר החי במסך, והיא היחידה שנושאת צבע ונקודה פועמת */
+.num-row.is-live .num-tag {
+  color: var(--go-ink);
+  background: var(--go-soft);
+  border-color: color-mix(in srgb, var(--go) 35%, transparent);
 }
-.src-bit {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0;
+.num-row.is-live .m-dot { inline-size: 6px; block-size: 6px; box-shadow: none; }
+
+.num-val {
+  font-size: 21px; font-weight: 800; line-height: 1;
+  letter-spacing: -.03em; color: var(--text-2);
 }
-.src-time {
-  margin-inline-start: auto; flex: 0 0 auto; white-space: nowrap;
-  color: var(--text-3);
+/* המוביל הוא התשובה; השני הוא ההקשר. הגופן שונה, התג זהה. */
+.num-row.is-lead .num-val { font-size: 38px; color: var(--kt-ink, var(--text)); }
+.num-val.muted { color: var(--text-3); font-weight: 700; }
+.num-unit { font-size: 12px; font-weight: 600; color: var(--text-2); line-height: 1; }
+.num-gust { font-size: 11.5px; color: var(--text-3); line-height: 1; }
+/* המוסמך שמפריד בין השתיים */
+.num-when {
+  margin-inline-start: auto; flex: 0 0 auto;
+  font-size: 11.5px; font-weight: 700; color: var(--text-2);
+  white-space: nowrap;
 }
-/* כשהמדידה מובילה — הנקודה הפועמת עולה לכאן, כי כאן עכשיו הדבר החי */
-.src-live .src-kind { color: var(--go-ink); }
-.lv-blocked .src-line, .lv-unknown .src-line { opacity: .55; }
+/* ⚠️ נמדד: עם ellipsis שם התחנה נחתך בכל כרטיס מועדון ("מד הרוח של
+   Surf Center — על חוף הק…"). זה בדיוק המידע שבונה את האמון, ולכן
+   הוא נשבר לשתי שורות ולא נחתך. שתי שורות של 11 פיקסלים זולות. */
+.num-src {
+  margin: 1px 0 0; font-size: 11px; line-height: 1.45; color: var(--text-3);
+}
+.lv-blocked .nums, .lv-unknown .nums { opacity: .72; }
+
+@media (max-width: 360px) {
+  .num-row.is-lead .num-val { font-size: 32px; }
+  .num-gust { display: none; }
+}
 
 /* ---- הפאנל "מאיפה המספר" ---- */
 .srcbox { display: flex; flex-direction: column; gap: 8px; margin-block: 2px 10px; }

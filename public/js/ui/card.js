@@ -94,102 +94,73 @@ export function ltr(s) {
 }
 
 /**
- * ההפרש בין מדוד לחזוי. מתחת לשני קשר זה רעש מדידה ולא אי-הסכמה,
- * ולכן הוא נאמר כ"תואם" ולא כמספר — מספר קטן מזמין פרשנות שאין לה כיסוי.
- */
-function deltaCls(d) {
-  if (Math.abs(d) < 2) return 'same';
-  return d > 0 ? 'up' : 'down';
-}
-
-/**
- * המשפט שנקרא פעם אחת. "מול 12 חזוי −4" הוא נכון ודורש פענוח;
- * הפער נגזר משני המספרים ולכן אין צורך להציג גם אותו.
- */
-function vsText(m) {
-  const f = `<span class="num" dir="ltr">${Math.round(m.forecastAtObsKt)}</span>`;
-  if (Math.abs(m.deltaKt) < 2) return `התחזית אמרה ${f} — תואם`;
-  return `התחזית אמרה ${f}`;
-}
-
-/**
- * התווית שמעל המספר הגדול — **מה הוא ומאיפה הוא**.
+ * שתי שורות המספרים — **הלב של הכרטיס**.
  *
- * זו הבקשה של ארז במילים שלו: "לכתוב מה המקור לנתון וזמן מדידה אחרון".
- * שני המספרים בכרטיס נכונים והם דברים שונים; מה ששבר את האמון היה
- * שהכרטיס לא אמר איזה מהם הוא איזה, והציג את הפחות אמין בגדול.
- * מכאן והלאה כל מספר נושא את שמו, בשני המצבים ובאותה צורה.
+ * הגרסה הקודמת שמה תווית "תחזית" בגופן 11.5 אפור חיוור **מעל** מספר
+ * של 38 פיקסלים מודגש. התווית הייתה שם ואיש לא קרא אותה: העין קופצת
+ * למספר. ארז ניסח את זה מדויק — "לא בדיוק ברור מה התחזית ומה נמדד".
+ *
+ * התיקון אינו עוד טקסט אלא **מבנה זהה לשניהם**: כל מספר יושב בשורה
+ * משלו, עם תג צמוד לו בגודל קבוע, ועם *מוסמך זמן* בקצה. ההבדל בין
+ * השניים נקרא מהזמן ולא מהניסוח:
+ *
+ *   [תחזית]  14 קשר · משב 17          18:00–20:00   ← חלון בעתיד
+ *   [● נמדד]  7 קשר · משב 14           לפני 38 דק׳   ← עכשיו
+ *
+ * מה שהוסר בכוונה: שם המודל (`ICON` אינו אומר דבר לגולש ומרעיש דווקא
+ * על המילה שחשובה), ו"התחזית אמרה 14" — כשהמספרים זה מעל זה ומתויגים,
+ * חזרה שלישית על אותו מספר מבלבלת במקום להסביר.
  */
-function srcLine(v, extra) {
-  const m = v.measured;
-  if (v.lead === 'measured' && m) {
-    const t = clockHe(m.tsMs);
-    return `<p class="src-line src-live">
-      <span class="m-dot" aria-hidden="true"></span>
-      <span class="src-kind">נמדד</span>
-      <span class="src-bit">${heText(m.stationName_he || 'מד רוח על החוף')}</span>
-      <span class="src-time">${t ? `<span dir="ltr">${esc(t)}</span>` : ''}${
-        m.ageMin != null ? ` · ${agoHe(m.ageMin)}` : ''}</span>
-    </p>`;
-  }
-  if (v.window?.meanKt == null) return '';
-  // ⚠️ שם המודל נלקח מ-modelInfo ולא מ-extra.model הגולמי: ברירת המחדל
-  // היא `best_match`, שאינו שם של מודל אלא בקשה — ובישראל הוא נפתר
-  // ל-ICON. כרטיס שהיה כותב "תחזית best_match" לא היה אומר כלום.
-  const mi = modelInfo(extra.model);
-  return `<p class="src-line">
-    <span class="src-kind">תחזית</span>
-    <span class="src-bit">${ltr(mi.label)}</span>
-    ${v.freshness?.ageMin != null
-      ? `<span class="src-time">נמשכה ${agoHe(v.freshness.ageMin)}</span>` : ''}
-  </p>`;
-}
-
-/**
- * הרצועה שמתחת למספר הגדול — **המספר השני**, זה שאינו מוביל.
- * במצב שבו המדידה מובילה, כאן יושבת התחזית; אחרת ההפך. הסימטריה
- * מכוונת: אותו מבנה, אותה תווית, אותו מקום — רק התוכן מתחלף.
- */
-function secondStrip(v, extra) {
+function numberRows(v, extra) {
   const m = v.measured;
   const w = v.window || {};
+  const hasWind = w.meanKt != null;
+  const leadMeasured = v.lead === 'measured' && m != null;
 
-  if (v.lead === 'measured' && m) {
-    const mi = modelInfo(extra.model);
-    return `
-  <div class="measured is-forecast">
-    <div class="m-head">
-      <span class="m-label">תחזית</span>
-      <span class="m-station">${ltr(mi.label)} · החלון הטוב ביותר היום</span>
-      ${w.startHour != null ? `<span class="m-age num" dir="ltr">${hhmmRange(w)}</span>` : ''}
-    </div>
-    <div class="m-body">
-      <span class="m-kt num">${n(w.meanKt)}</span>
-      <span class="m-unit">קשר</span>
-      ${w.gustKt != null ? `<span class="m-gust num">משב ${n(w.gustKt)}</span>` : ''}
-      ${w.hoursRideable > 0
-        ? `<span class="m-vs">${n(w.hoursRideable)} שעות מעל הסף</span>` : ''}
-    </div>
+  const forecastRow = hasWind ? row({
+    kind: 'forecast',
+    lead: !leadMeasured,
+    tag: 'תחזית',
+    live: false,
+    kt: w.meanKt,
+    gustKt: w.gustKt,
+    when: w.startHour != null
+      ? `<span dir="ltr">${hhmmRange(w)}</span>`
+      : 'החלון הטוב ביותר',
+  }) : `<div class="num-row is-lead" data-kind="forecast">
+      <span class="num-tag">תחזית</span>
+      <span class="num-val kt num muted">—</span>
+    </div>`;
+
+  const measuredRow = m ? row({
+    kind: 'measured',
+    lead: leadMeasured,
+    tag: 'נמדד',
+    live: true,
+    kt: m.speedKt,
+    gustKt: m.gustKt,
+    // ⚠️ "לפני 38 דק׳" הוא מה שמבדיל את השורה הזו מהתחזית, ולכן הוא
+    // אף פעם לא מוותר על מקומו לטובת שם התחנה. שם התחנה יורד לשורת
+    // המקור שמתחת — הוא בונה אמון, אבל הוא לא מה שמפריד בין השתיים.
+    when: agoHe(m.ageMin) || 'עכשיו',
+  }) : '';
+
+  const src = m ? `<p class="num-src">${heText(m.stationName_he || 'מד רוח על החוף')}${
+    clockHe(m.tsMs) ? ` · <span dir="ltr">${esc(clockHe(m.tsMs))}</span>` : ''}</p>` : '';
+
+  return `<div class="nums" data-lead="${leadMeasured ? 'measured' : 'forecast'}">
+    ${leadMeasured ? measuredRow + forecastRow : forecastRow + measuredRow}
+    ${src}
   </div>`;
-  }
+}
 
-  if (!m) return '';
-  const t = clockHe(m.tsMs);
-  return `
-  <div class="measured">
-    <div class="m-head">
-      <span class="m-dot" aria-hidden="true"></span>
-      <span class="m-label">נמדד</span>
-      <span class="m-station">${heText(m.stationName_he || 'מד רוח על החוף')}</span>
-      <span class="m-age">${t ? `<span dir="ltr">${esc(t)}</span>` : ''}${
-        m.ageMin != null ? ` · ${agoHe(m.ageMin)}` : ''}</span>
-    </div>
-    <div class="m-body">
-      <span class="m-kt num">${n(m.speedKt)}</span>
-      <span class="m-unit">קשר</span>
-      ${m.gustKt != null ? `<span class="m-gust num">משב ${n(m.gustKt)}</span>` : ''}
-      <span class="m-vs ${deltaCls(m.deltaKt)}">${vsText(m)}</span>
-    </div>
+function row({ kind, lead, tag, live, kt, gustKt, when }) {
+  return `<div class="num-row${lead ? ' is-lead' : ''}${live ? ' is-live' : ''}" data-kind="${kind}">
+    <span class="num-tag">${live ? '<i class="m-dot" aria-hidden="true"></i>' : ''}${esc(tag)}</span>
+    <span class="num-val${lead ? ' kt' : ''} num">${n(kt)}</span>
+    <span class="num-unit">קשר</span>
+    ${gustKt != null ? `<span class="num-gust num">משב ${n(gustKt)}</span>` : ''}
+    <span class="num-when">${when}</span>
   </div>`;
 }
 
@@ -241,31 +212,8 @@ export function renderCard(spot, v, extra = {}) {
     <span class="verdict-badge">${esc(meta.label)}</span>
   </header>
 
-  ${srcLine(v, extra)}
-
   <div class="card-main">
-    <div class="wind">
-      ${leadMeasured
-        ? `<span class="kt num">${n(v.measured.speedKt)}</span>
-           <span class="wind-meta">
-             <span class="unit">קשר</span>
-             ${v.measured.gustKt != null ? `<span class="gust num">משב ${n(v.measured.gustKt)}</span>` : ''}
-           </span>`
-        : hasWind
-        ? `<span class="kt num">${n(w.meanKt)}</span>
-           <span class="wind-meta">
-             <span class="unit">קשר</span>
-             ${w.gustKt != null ? `<span class="gust num">משב ${n(w.gustKt)}</span>` : ''}
-           </span>`
-        : `<span class="kt num muted">—</span>`}
-    </div>
-    ${!leadMeasured && w.startHour != null ? `
-    <div class="when">
-      <span class="when-range num" dir="ltr">${hhmmRange(w)}</span>
-      ${w.hoursRideable > 0
-        ? `<span class="when-hours">${n(w.hoursRideable)} שעות מעל הסף</span>`
-        : `<span class="when-hours">החלון הטוב ביותר</span>`}
-    </div>` : ''}
+    ${numberRows(v, extra)}
     ${/* ⚠️ המצפן נשאר על **כיוון התחזית** גם כשהמדידה מובילה, ובכוונה:
           הוא הסימן הבטיחותי היחיד במסך, והוא זה שנגזרה ממנו הדרגה.
           מצפן שמצייר את הכיוון הנמדד ותג "צד-חוף" שנגזר מהחזוי היו
@@ -283,8 +231,6 @@ export function renderCard(spot, v, extra = {}) {
       </span>
     </div>` : ''}
   </div>
-
-  ${secondStrip(v, extra)}
 
   ${hasWind && extra.hours?.length ? `
   <div class="spark-wrap">

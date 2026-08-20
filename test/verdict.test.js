@@ -836,7 +836,14 @@ test('רוח נמדדת חזקה אינה מעלה דרגה, גם כשהיא מ�
 
 /* ---------------- מה הכרטיס באמת מרנדר ---------------- */
 
-test('כשהמדידה מובילה — היא המספר הגדול, והתחזית יורדת לרצועה', async () => {
+/** שולף את שתי שורות המספרים מה-HTML של הכרטיס, לפי סדר ההופעה */
+function numRows(html) {
+  return [...html.matchAll(
+    /<div class="num-row([^"]*)" data-kind="(\w+)">[\s\S]*?<span class="num-val([^"]*)">([^<]+)<\/span>/g)]
+    .map(m => ({ kind: m[2], lead: /is-lead/.test(m[1]), val: m[4] }));
+}
+
+test('כשהמדידה מובילה — היא המספר הגדול, והתחזית נשארת לצידה', async () => {
   // ⚠️ בדיקה על החישוב אינה בדיקה על מה שמצויר. v.lead יכול להיות
   // נכון בזמן שהתבנית מתעלמת ממנו לחלוטין.
   const { renderCard } = await import('../public/js/ui/card.js');
@@ -844,44 +851,58 @@ test('כשהמדידה מובילה — היא המספר הגדול, והתחז
   const v = scoreSpot(s, GREEN_FC(), obsOf(), NOON_IL, {}, 0);
   const html = renderCard(s, v, { model: 'ecmwf_ifs025' });
 
-  const big = /<span class="kt num">(\d+)<\/span>/.exec(html);
-  assert.ok(big, 'לכרטיס חייב להיות מספר גדול');
-  assert.equal(+big[1], 20, 'המספר הגדול הוא המדידה');
+  assert.match(html, /<div class="nums" data-lead="measured">/);
+  const rows = numRows(html);
+  assert.equal(rows.length, 2, 'שני המספרים מוצגים תמיד — השני אינו נעלם');
+  assert.equal(rows[0].kind, 'measured', 'המדידה ראשונה כשהיא מובילה');
+  assert.ok(rows[0].lead);
+  assert.equal(rows[0].val, '20');
+  assert.equal(rows[1].kind, 'forecast');
+  assert.ok(!rows[1].lead, 'רק אחת מובילה');
+  assert.equal(rows[1].val, '17');
 
-  const strip = /<div class="measured is-forecast">[\s\S]*?<span class="m-kt num">(\d+)<\/span>/.exec(html);
-  assert.ok(strip, 'התחזית יורדת לרצועה, ולא נעלמת');
-  assert.equal(+strip[1], 17);
-  assert.match(html, /<span class="m-age num" dir="ltr">\d\d:00–\d\d:00<\/span>/,
-    'הרצועה נושאת את שעות החלון, ובעטיפת LTR');
+  // ⚠️ מה שמפריד בין השתיים אינו הניסוח אלא **הזמן**: חלון שעות מול
+  // "לפני N דקות". זו ההבחנה שארז לא הצליח לקרוא מהכרטיס הקודם.
+  assert.match(html, /<span class="num-when">לפני <span class="num">3<\/span> דק׳<\/span>/);
+  assert.match(html, /<span class="num-when"><span dir="ltr">[0-9][0-9]:00–[0-9][0-9]:00<\/span><\/span>/,
+    'התחזית נושאת חלון שעות, בעטיפת LTR');
 });
 
-test('כשהתחזית מובילה — הכרטיס נשאר כפי שהיה, עם תווית מקור', async () => {
+test('כשהתחזית מובילה — אותו מבנה בדיוק, הפוך', async () => {
   const { renderCard } = await import('../public/js/ui/card.js');
   const s = LEAD_SPOT();
   const v = scoreSpot(s, GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
   const html = renderCard(s, v, { model: 'ecmwf_ifs025' });
 
-  const big = /<span class="kt num">(\d+)<\/span>/.exec(html);
-  assert.equal(+big[1], 17, 'המספר הגדול הוא התחזית');
-  assert.match(html, /<span class="src-kind">תחזית<\/span>/);
-  assert.match(html, /<span dir="ltr">ECMWF<\/span>/,
-    'המודל נאמר בשם — זו הבקשה: מה המקור לנתון');
-  assert.doesNotMatch(html, /measured is-forecast/);
-  assert.match(html, /<span class="m-kt num">20<\/span>/, 'המדידה ברצועה');
+  assert.match(html, /<div class="nums" data-lead="forecast">/);
+  const rows = numRows(html);
+  assert.equal(rows[0].kind, 'forecast', 'התחזית ראשונה כשהיא מובילה');
+  assert.ok(rows[0].lead);
+  assert.equal(rows[0].val, '17');
+  assert.equal(rows[1].kind, 'measured');
+  assert.equal(rows[1].val, '20', 'המדידה מוצגת גם כשהיא לא מובילה');
+
+  // ⚠️ שם המודל ירד מהכרטיס בכוונה: "ICON" אינו אומר דבר לגולש, והוא
+  // מרעיש דווקא על המילה שחשובה. מקומו בפאנל "מאיפה המספר".
+  assert.doesNotMatch(html, /ECMWF/,
+    'שם המודל שייך לפאנל, לא לכרטיס');
 });
 
-test('כל מספר בכרטיס נושא מקור וזמן', async () => {
+test('כל מספר בכרטיס נושא תג משלו, ושני התגים באותו מבנה', async () => {
   const { renderCard } = await import('../public/js/ui/card.js');
   const s = LEAD_SPOT();
   const v = scoreSpot(s, GREEN_FC(), obsOf(), NOON_IL, {}, 0);
   const html = renderCard(s, v, { model: 'ecmwf_ifs025' });
 
-  assert.match(html, /<span class="src-kind">נמדד<\/span>/);
-  assert.match(html, /<span dir="ltr">Surf Center<\/span>/,
-    'שם התחנה מופיע על הכרטיס עצמו, כבלוק LTR אחד');
+  // ⚠️ הבאג שהיה כאן: התווית הייתה 11.5 אפור חיוור מעל מספר של 38
+  // מודגש. היא הייתה שם ואיש לא קרא אותה. שני התגים חייבים להיות
+  // אותו אלמנט באותו גודל — אחרת העין קוראת רק את הגדול.
+  assert.match(html, /<span class="num-tag">תחזית<\/span>/);
+  assert.match(html, /<span class="num-tag"><i class="m-dot" aria-hidden="true"><\/i>נמדד<\/span>/);
+  assert.match(html, /<p class="num-src">[\s\S]*?<span dir="ltr">Surf Center<\/span>/,
+    'שם התחנה על הכרטיס עצמו, כבלוק LTR אחד');
   assert.match(html, /<span dir="ltr">13:00<\/span>/,
     'שעת המדידה המוחלטת — "לפני 3 דק׳" לבדו נגזר משעון המכשיר');
-  assert.match(html, /לפני <span class="num">3<\/span> דק׳/);
 });
 
 test('שם לטיני דו-מילי נשאר בלוק אחד — אחרת הוא מתהפך', async () => {
