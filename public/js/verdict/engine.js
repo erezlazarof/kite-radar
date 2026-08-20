@@ -28,6 +28,26 @@ export const MIN_RIDEABLE_KT = 12;
 /** פער בין מדוד לחזוי שמעליו אנחנו מודים שאיננו יודעים */
 export const OBS_DISAGREE_KT = 5;
 
+/**
+ * גיל מרבי שבו מדידה עדיין רשאית להיות **המספר הגדול בכרטיס**,
+ * לפי קצב המקור.
+ *
+ * ⚠️ סף אחיד נמדד ונפסל: השמ"ט מפרסם כל חצי שעה, וב-20/8 הקריאות
+ * החיות היו בנות 28 ו-31 דקות באותו יום. סף של 30 היה מחליף את פריסת
+ * הכרטיס הלוך ושוב בכל רענון — כרטיס שמזיז את המספר הגדול שלו כל חמש
+ * דקות אינו קריא, והוא גם נראה שבור.
+ *
+ * לכן הסף נגזר מקצב המקור ולא מטעם: תחנת מועדון משדרת כל דקה, וקריאה
+ * בת עשרים דקות ממנה פספסה עשרים מחזורים — כלומר משהו תקוע. השמ"ט
+ * בן 45 דקות הוא לכל היותר מחזור אחד באיחור.
+ */
+export const OBS_LEAD_MAX_AGE_MIN = { club: 20, default: 45 };
+
+/** הסף שחל על מדידה מסוימת */
+export function leadMaxAgeMin(source) {
+  return OBS_LEAD_MAX_AGE_MIN[source] ?? OBS_LEAD_MAX_AGE_MIN.default;
+}
+
 /** ספי ניקוד המהירות שמשמשים כשער. תואמים ל-12 ו-15 קשר אפקטיביים. */
 export const SPEED_GATE = { noGo: 40, marginal: 60 };
 
@@ -71,7 +91,7 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
       ...base, level: 'blocked', score: null, window, gate,
       dirCls: dirB.cls, dirNote: null,
       components: { speed: null, direction: null, gust: null, water: null },
-      measured: null,
+      measured: null, lead: 'forecast',
       flags: [], confidence: { level: 'low', modelSpreadKt: null, runDeltaKt: null },
     };
     return finish(v, spot);
@@ -138,7 +158,15 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
                  // הכרטיס מציג הפרש מול מספר שלא הושתתף בחישוב.
                  forecastAtObsKt: Math.round(obs.forecastAtObsKt * 10) / 10,
                  source: obs.source || null,
-                 stationName_he: obs.stationName_he || null, distanceKm: obs.distanceKm ?? null };
+                 stationName_he: obs.stationName_he || null, distanceKm: obs.distanceKm ?? null,
+                 // ⚠️ שלושת אלה אינם קישוט. `tsMs` הוא **זמן המדידה** —
+                 // הדבר שארז ביקש שייכתב במפורש, ובלעדיו "לפני 11 דק׳"
+                 // הוא הבטחה בלי מקור. `representative` הוא התנאי שבו
+                 // המדידה רשאית להוביל, ו-`feedState` אומר אם ההזנה
+                 // עצמה חיה — קריאה טרייה מהזנה שנפלה היא סתירה.
+                 tsMs: obs.tsMs ?? null,
+                 representative: obs.representative === true,
+                 feedState: obs.feed?.state || null };
     if (Math.abs(deltaKt) >= OBS_DISAGREE_KT) {
       level = cap(level, 'yellow');
       flags.push('obs_disagrees');
@@ -181,10 +209,51 @@ export function scoreSpot(spot, forecast, obs, nowMs, prefs = {}, day = 0) {
       runDeltaKt: null,
     },
   };
+  v.lead = leadSource(v, spot, nowMs);
   return finish(v, spot);
 }
 
 /* ------------------------------------------------------------------ */
+
+/**
+ * מי מוביל בכרטיס — `'measured'` או `'forecast'`.
+ *
+ * ⚠️ **זו אינה החלטת פסק דין.** הדרגה כבר נקבעה למעלה והפונקציה הזו
+ * לא נוגעת בה: המדידה אינה משדרגת, אינה מורידה, ואינה עוקפת שום שער.
+ * חוק ברזל 5 נשאר במקומו במלואו.
+ *
+ * מה שהיא כן פותרת הוא בעיית אמון: כשיש אנמומטר על החוף עצמו, המספר
+ * שלו הוא מה שקורה, והתחזית היא הניחוש. הצגת הניחוש בגופן כפול מגודל
+ * המדידה לימדה את הגולש שהאתר סותר את מה שהוא רואה בעיניים — ואתר
+ * שסותר את המציאות אינו נקרא, גם כשהוא צודק.
+ *
+ * ארבעה תנאים, וכל אחד מהם לבדו מחזיר את ההובלה לתחזית:
+ */
+export function leadSource(v, spot, nowMs) {
+  const m = v.measured;
+  if (!m) return 'forecast';
+
+  // 1. רק מדידה שמייצגת את החוף הזה. תחנה אזורית שמונה קילומטרים
+  //    פנימה אינה האמת על החוף, וגודל הגופן אינו המקום להתווכח על כך.
+  //    `representative` הוא נתון ברג'יסטר — לא ענף פר-ספוט כאן.
+  if (m.representative !== true) return 'forecast';
+
+  // 2. רק מדידה טרייה ביחס לקצב שבו המקור שלה משדר.
+  if (m.ageMin == null || m.ageMin > leadMaxAgeMin(m.source)) return 'forecast';
+
+  // 3. רק ירוק וצהוב. באדום, ב"אסור" וב"אין נתונים" פסק הדין *הוא*
+  //    המסר, ומספר מדוד גדול לצידו נקרא כעידוד — בדיוק כמו שכבת
+  //    התכנון ששותקת שם. המדידה יורדת לרצועה, והדגל שכבר נורה נשאר.
+  if (v.level !== 'green' && v.level !== 'yellow') return 'forecast';
+
+  // 4. רק כשהשאלה היא "עכשיו". מחוץ לשעות הגלישה של הספוט השאלה היא
+  //    "מתי", ועליה עונה החלון ולא האנמומטר.
+  const w = spot.daytime_window || { start: 7, end: 19 };
+  const hour = israelDateParts(nowMs).hour;
+  if (hour < w.start || hour >= w.end) return 'forecast';
+
+  return 'measured';
+}
 
 function unknownVerdict(spot, base, reasonCode) {
   const v = {
@@ -192,7 +261,7 @@ function unknownVerdict(spot, base, reasonCode) {
     window: { meanKt: null, gustKt: null, dirDeg: null, hoursRideable: 0 },
     gate: null, dirCls: null, dirNote: null,
     components: { speed: null, direction: null, gust: null, water: null },
-    measured: null,
+    measured: null, lead: 'forecast',
     flags: [], reasonCode,
     confidence: { level: 'low', modelSpreadKt: null, runDeltaKt: null },
   };

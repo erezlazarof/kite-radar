@@ -31,6 +31,7 @@ import { renderCard, renderDetail } from '../js/ui/card.js';
 import { scoreSpot } from '../js/verdict/engine.js';
 import { makeUserSpot } from '../js/userspots.js';
 import { renderDial } from '../js/ui/dial.js';
+import { headlineModelFor } from '../js/sources/openmeteo.js';
 
 if (location.search.includes('dark')) document.documentElement.dataset.theme = 'dark';
 
@@ -78,6 +79,21 @@ function threeDays(day0) {
   return out;
 }
 
+/**
+ * מדידה חיה סינתטית.
+ *
+ * ⚠️ עד 20/8/2026 הגלריה העבירה `null` למדידה, ולכן **רצועת המדידה
+ * ופסקת המקור לא נבדקו כאן מעולם** — שני האלמנטים שנוגעים ישירות
+ * באמון במספר. הם נבדקים עכשיו בכל חמשת המצבים שלהם.
+ */
+function obs({ kt = 20, gust = 24, dir = 300, fcAt = 18, ageMin = 2, rep = true,
+               name = 'מד הרוח של Surf Center — על חוף הקייט', km = 0.02 } = {}) {
+  return { speedKt: kt, gustKt: gust, dirDeg: dir, ageMin,
+           forecastAtObsKt: fcAt, tsMs: NOW - ageMin * 60000,
+           representative: rep, source: rep ? 'club' : 'ims',
+           stationName_he: name, distanceKm: km, feed: { state: 'fresh' } };
+}
+
 const CASES = [
   ['ירוק — יום קלאסי', S('bat-yam', 'center'), day({ peak: 19, dir: 300 }), NOW],
   ['ירוק — רוח חזקה', S('betzet', 'north'), day({ peak: 26, peakHour: 14, dir: 285 }), NOW],
@@ -93,20 +109,38 @@ const CASES = [
   ['חורים בנתונים', S('betzet', 'north'), day({ peak: 18, dir: 290, holes: [10, 11, 16] }), NOW],
   // שלב 6 — אותה רוח שנותנת ירוק בספוט ליבה, חסומה על צהוב כאן
   ['ספוט שהמשתמש הוסיף', MINE, day({ peak: 19, dir: 300 }), NOW],
+
+  /* ---- דיוק ואמון: חמשת מצבי המדידה ---- */
+  ['מדידה מובילה — האנמומטר על החוף עצמו',
+   S('hadera', 'center'), day({ peak: 18, dir: 300 }), NOW, 3, obs({ kt: 21, fcAt: 18 })],
+  ['תחזית מובילה — תחנה אזורית רחוקה',
+   S('beit-yanai', 'center'), day({ peak: 18, dir: 300 }), NOW, 3,
+   obs({ kt: 21, fcAt: 18, rep: false, name: 'תחנת HADERA PORT', km: 9.9 })],
+  ['מדידה חלוקה — פער שמוריד דרגה',
+   S('hadera', 'center'), day({ peak: 19, dir: 300 }), NOW, 3, obs({ kt: 11, gust: 14, fcAt: 19 })],
+  ['אדום — המדידה חזקה, ופסק הדין עדיין מוביל',
+   S('bat-yam', 'center'), day({ peak: 22, dir: 90 }), NOW, 3, obs({ kt: 24, gust: 29, dir: 92, fcAt: 22 })],
+  ['כיוון נמדד מסוכן — המהירויות תואמות',
+   S('hadera', 'center'), day({ peak: 18, dir: 300 }), NOW, 3, obs({ kt: 18, dir: 100, fcAt: 18 })],
 ];
 
 const host = document.querySelector('#cards');
 
 // ?only=dials — פס החוגות בלבד. גלריה בת 3400 פיקסלים אינה ניתנת
 // לבדיקה ויזואלית בצילום אחד, וחוגה שגויה מתגלה רק כשרואים אותה בגודל.
+// ?only=live — רק המצבים שיש בהם מדידה חיה, מאותה סיבה בדיוק.
 const ONLY = new URLSearchParams(location.search).get('only');
 
-host.innerHTML = ONLY === 'dials' ? '' : CASES.map(([label, spot, hours, now, ageMin = 3]) => {
+const SHOWN = ONLY === 'live' ? CASES.filter(c => c[5]) : CASES;
+
+host.innerHTML = ONLY === 'dials' ? '' : SHOWN.map(([label, spot, hours, now, ageMin = 3, ob = null]) => {
   const fc = { hours, ageMin };
-  const v = scoreSpot(spot, fc, null, now, { weightKg: 75 }, 0);
+  const v = scoreSpot(spot, fc, ob, now, { weightKg: 75 }, 0);
+  const model = headlineModelFor(spot);
   return `<p class="gal-h">${label}</p>` +
-         renderCard(spot, v, { hours, nowHour: 13.5 }) +
+         renderCard(spot, v, { hours, nowHour: 13.5, model }) +
          renderDetail(spot, v, {
+           model,
            grid: { distanceKm: 4.2 },
            prefs: { weightKg: 75, quiver: [7, 9, 12] },
            allHours: threeDays(hours),

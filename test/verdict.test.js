@@ -655,3 +655,292 @@ test('the public URL lives in config.js only — three deploy targets must not d
   assert.deepEqual(offenders, [],
     'these files hardcode a pages.dev URL — import SITE_URL from config.js instead');
 });
+
+/* ===================== דיוק ואמון: מי מוביל בכרטיס =====================
+   הרקע: ב-20/8/2026 הראה כרטיס אילת "13" בגופן של 38 פיקסלים בזמן
+   שהאנמומטר שעל החוף מדד 16.9, בגופן של 19. שני המספרים היו נכונים —
+   תחזית ECMWF לחלון 12:00–14:00 מול מדידה של 13:00 — אבל הכרטיס לא
+   אמר איזה מהם איזה, והציג את **הפחות אמין בגדול**. הפער היה 3.7 קשר,
+   מתחת לסף אי-ההסכמה, ולכן גם דגל לא נורה.
+
+   ⚠️ ההכרעה כאן היא **תצוגתית בלבד**. חוק ברזל 5 נשאר במלואו: המדידה
+   אינה מחליפה את פסק הדין, אינה משדרגת אותו, ואינה עוקפת שום שער.
+   הבדיקה "חוק ברזל 5" בסעיף הזה היא זו שאוכפת את זה.                */
+
+/** מדידה סינתטית. ברירת המחדל: תחנת מועדון ייצוגית, טרייה, מסכימה. */
+function obsOf(over = {}) {
+  return {
+    speedKt: 20, gustKt: 24, dirDeg: 310, ageMin: 3,
+    forecastAtObsKt: 17, tsMs: Date.UTC(2026, 7, 20, 10, 0),
+    representative: true, source: 'club',
+    stationName_he: 'מד הרוח של Surf Center — על חוף הקייט',
+    distanceKm: 0.02, feed: { state: 'fresh' },
+    ...over,
+  };
+}
+
+/** 13:00 בשעון ישראל באוגוסט (IDT), בתוך חלון הגלישה של הספוט */
+const NOON_IL = Date.UTC(2026, 7, 20, 10, 0);
+/** 21:00 בשעון ישראל — אחרי סגירת החלון */
+const NIGHT_IL = Date.UTC(2026, 7, 20, 18, 0);
+
+/** ספוט ההובלה: תחנה ייצוגית ב-1.6 ק"מ, בלי עונה ובלי איסורים */
+const LEAD_SPOT = () => spot('hadera');
+const GREEN_FC = () => fc({ kt: 17, gust: 20, dir: 310 });
+
+test('מדידה ייצוגית וטרייה היא המספר הגדול בכרטיס', () => {
+  const v = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NOON_IL, {}, 0);
+  assert.equal(v.lead, 'measured');
+  assert.equal(v.measured.speedKt, 20);
+  assert.equal(v.window.meanKt, 17, 'החלון עצמו לא זז — רק מי מוצג גדול');
+});
+
+test('תחנה שאינה מייצגת את החוף לעולם לא מובילה', () => {
+  // תחנה אזורית שמונה קילומטרים פנימה אינה האמת על החוף, וגודל הגופן
+  // אינו המקום להתווכח על כך. representative הוא נתון ברג'יסטר.
+  const v = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
+  assert.equal(v.lead, 'forecast');
+  assert.ok(v.measured, 'היא עדיין מוצגת — היא פשוט לא מובילה');
+});
+
+test('סף הטריות נגזר מקצב המקור, ונבדק משני צדיו', async () => {
+  // ⚠️ סף אחיד נמדד ונפסל: השמ"ט מפרסם כל חצי שעה,
+  // וב-20/8 הקריאות החיות היו בנות 28 ו-31 דקות באותו יום. סף
+  // אחיד של 30 היה מחליף את פריסת הכרטיס הלוך וחזור בכל רענון.
+  //
+  // הנקודות נבנות מהקבועים עצמם, כך שבדיקה לא תאשר מחדש את החוזה של
+  // עצמה אם מישהו ישנה אותם.
+  const { OBS_LEAD_MAX_AGE_MIN, leadMaxAgeMin } = await import('../public/js/verdict/engine.js');
+  assert.ok(OBS_LEAD_MAX_AGE_MIN.club < OBS_LEAD_MAX_AGE_MIN.default,
+    'תחנה שמשדרת כל דקה חייבת לעמוד ברף גבוה יותר ממחזור חצי-שעתי');
+  assert.equal(leadMaxAgeMin('ims'), OBS_LEAD_MAX_AGE_MIN.default);
+  assert.equal(leadMaxAgeMin(null), OBS_LEAD_MAX_AGE_MIN.default, 'מקור לא ידוע מקבל את הסף השמרני');
+
+  for (const src of ['club', 'ims']) {
+    const cap = leadMaxAgeMin(src);
+    const atLimit = scoreSpot(LEAD_SPOT(), GREEN_FC(),
+      obsOf({ source: src, ageMin: cap }), NOON_IL, {}, 0);
+    const past = scoreSpot(LEAD_SPOT(), GREEN_FC(),
+      obsOf({ source: src, ageMin: cap + 1 }), NOON_IL, {}, 0);
+    assert.equal(atLimit.lead, 'measured', src);
+    assert.equal(past.lead, 'forecast', src);
+  }
+
+  // השמ"ט בן 28 דקות הוא המקרה שנמדד בפועל, והוא חייב לעבור
+  const ims28 = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ source: 'ims', ageMin: 28 }), NOON_IL, {}, 0);
+  const club28 = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ source: 'club', ageMin: 28 }), NOON_IL, {}, 0);
+  assert.equal(ims28.lead, 'measured');
+  assert.equal(club28.lead, 'forecast', 'מד רוח שמשדר כל דקה ושותק 28 — משהו תקוע בו');
+
+  const noAge = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ ageMin: null }), NOON_IL, {}, 0);
+  assert.equal(noAge.lead, 'forecast', 'גיל חסר אינו גיל אפס');
+});
+
+test('מדידה בת אפס דקות היא "הרגע", לא "לפני 0 דק׳"', async () => {
+  // נראה חי ב-20/8: התחזית נמשכה באותה דקה וכל 26 הכרטיסים
+  // אמרו "נמשכה לפני 0 דק׳" — מספר שנקרא כשדה ריק.
+  const { agoHe } = await import('../public/js/ui/card.js');
+  assert.equal(agoHe(0), 'הרגע');
+  assert.equal(agoHe(0.4), 'הרגע');
+  assert.match(agoHe(3), /לפני <span class="num">3<\/span> דק׳/);
+  assert.equal(agoHe(null), '', 'גיל חסר אינו אפס ואינו "הרגע"');
+  assert.equal(agoHe(undefined), '');
+});
+
+test('בכרטיס אדום פסק הדין מוביל, לא המדידה', () => {
+  // מספר מדוד גדול על כרטיס "לא ללכת" נקרא כעידוד — בדיוק כמו שכבת
+  // התכנון ששותקת שם. הרוח הנמדדת חזקה, והתשובה עדיין "לא".
+  const v = scoreSpot(LEAD_SPOT(), fc({ kt: 8, gust: 10, dir: 310 }),
+    obsOf({ speedKt: 22, forecastAtObsKt: 8 }), NOON_IL, {}, 0);
+  assert.equal(v.level, 'red');
+  assert.equal(v.lead, 'forecast');
+  assert.ok(v.flags.includes('obs_disagrees'), 'הפער עדיין מרים דגל');
+});
+
+test('כרטיס אסור וכרטיס בלי נתונים נושאים lead תמיד', () => {
+  const blocked = scoreSpot(spot('tel-aviv'), GREEN_FC(), obsOf(),
+    Date.UTC(2026, 6, 18, 8), {}, 0);
+  assert.equal(blocked.lead, 'forecast');
+  const unknown = scoreSpot(LEAD_SPOT(), { hours: [], ageMin: 5 }, obsOf(), NOON_IL, {}, 0);
+  assert.equal(unknown.level, 'unknown');
+  assert.equal(unknown.lead, 'forecast');
+});
+
+test('מחוץ לשעות הגלישה השאלה היא "מתי" — והחלון עונה עליה', () => {
+  const day = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NOON_IL, {}, 0);
+  const night = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NIGHT_IL, {}, 0);
+  assert.equal(day.lead, 'measured');
+  assert.equal(night.lead, 'forecast');
+});
+
+test('⚠️ חוק ברזל 5 — ההובלה אינה נוגעת בפסק הדין', () => {
+  // הבדיקה המרכזית של השינוי הזה. שני פסקי דין שנבדלים אך ורק בתנאי
+  // ההובלה חייבים להיות זהים בכל מה שנוגע לבטיחות: דרגה, ניקוד, דגלים
+  // ורכיבים. אם מישהו יקשור אי פעם את leadSource לדירוג, המדידה תתחיל
+  // לשדרג כרטיסים — וזה בדיוק מה שהחוק אוסר.
+  const leads = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NOON_IL, {}, 0);
+  const trails = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
+
+  assert.equal(leads.lead, 'measured');
+  assert.equal(trails.lead, 'forecast');
+  assert.equal(leads.level, trails.level);
+  assert.equal(leads.score, trails.score);
+  assert.deepEqual(leads.flags, trails.flags);
+  assert.deepEqual(leads.components, trails.components);
+  assert.equal(leads.reason.headline, trails.reason.headline,
+    'גם הניסוח נגזר מהתחזית — הכותרת מתארת את פסק הדין, לא את האנמומטר');
+});
+
+test('רוח נמדדת חזקה אינה מעלה דרגה, גם כשהיא מובילה', () => {
+  // הרוח החזויה גבולית, הנמדדת מצוינת. הכרטיס מציג את הנמדדת בגדול —
+  // ונשאר צהוב, כי מה שיש לנו הוא עדיין חוסר ידיעה.
+  const v = scoreSpot(LEAD_SPOT(), fc({ kt: 13, gust: 15, dir: 310 }),
+    obsOf({ speedKt: 19, forecastAtObsKt: 16 }), NOON_IL, {}, 0);
+  assert.equal(v.lead, 'measured');
+  assert.equal(v.measured.speedKt, 19);
+  assert.equal(v.level, 'yellow', 'ירוק היה מגיע רק מהתחזית, וזו לא השתנתה');
+});
+
+/* ---------------- מה הכרטיס באמת מרנדר ---------------- */
+
+test('כשהמדידה מובילה — היא המספר הגדול, והתחזית יורדת לרצועה', async () => {
+  // ⚠️ בדיקה על החישוב אינה בדיקה על מה שמצויר. v.lead יכול להיות
+  // נכון בזמן שהתבנית מתעלמת ממנו לחלוטין.
+  const { renderCard } = await import('../public/js/ui/card.js');
+  const s = LEAD_SPOT();
+  const v = scoreSpot(s, GREEN_FC(), obsOf(), NOON_IL, {}, 0);
+  const html = renderCard(s, v, { model: 'ecmwf_ifs025' });
+
+  const big = /<span class="kt num">(\d+)<\/span>/.exec(html);
+  assert.ok(big, 'לכרטיס חייב להיות מספר גדול');
+  assert.equal(+big[1], 20, 'המספר הגדול הוא המדידה');
+
+  const strip = /<div class="measured is-forecast">[\s\S]*?<span class="m-kt num">(\d+)<\/span>/.exec(html);
+  assert.ok(strip, 'התחזית יורדת לרצועה, ולא נעלמת');
+  assert.equal(+strip[1], 17);
+  assert.match(html, /<span class="m-age num" dir="ltr">\d\d:00–\d\d:00<\/span>/,
+    'הרצועה נושאת את שעות החלון, ובעטיפת LTR');
+});
+
+test('כשהתחזית מובילה — הכרטיס נשאר כפי שהיה, עם תווית מקור', async () => {
+  const { renderCard } = await import('../public/js/ui/card.js');
+  const s = LEAD_SPOT();
+  const v = scoreSpot(s, GREEN_FC(), obsOf({ representative: false }), NOON_IL, {}, 0);
+  const html = renderCard(s, v, { model: 'ecmwf_ifs025' });
+
+  const big = /<span class="kt num">(\d+)<\/span>/.exec(html);
+  assert.equal(+big[1], 17, 'המספר הגדול הוא התחזית');
+  assert.match(html, /<span class="src-kind">תחזית<\/span>/);
+  assert.match(html, /<span dir="ltr">ECMWF<\/span>/,
+    'המודל נאמר בשם — זו הבקשה: מה המקור לנתון');
+  assert.doesNotMatch(html, /measured is-forecast/);
+  assert.match(html, /<span class="m-kt num">20<\/span>/, 'המדידה ברצועה');
+});
+
+test('כל מספר בכרטיס נושא מקור וזמן', async () => {
+  const { renderCard } = await import('../public/js/ui/card.js');
+  const s = LEAD_SPOT();
+  const v = scoreSpot(s, GREEN_FC(), obsOf(), NOON_IL, {}, 0);
+  const html = renderCard(s, v, { model: 'ecmwf_ifs025' });
+
+  assert.match(html, /<span class="src-kind">נמדד<\/span>/);
+  assert.match(html, /<span dir="ltr">Surf Center<\/span>/,
+    'שם התחנה מופיע על הכרטיס עצמו, כבלוק LTR אחד');
+  assert.match(html, /<span dir="ltr">13:00<\/span>/,
+    'שעת המדידה המוחלטת — "לפני 3 דק׳" לבדו נגזר משעון המכשיר');
+  assert.match(html, /לפני <span class="num">3<\/span> דק׳/);
+});
+
+test('שם לטיני דו-מילי נשאר בלוק אחד — אחרת הוא מתהפך', async () => {
+  // ⚠️ נראה בצילום חי (20/8): heText עטף כל מילה בנפרד, ושני
+  // בלוקי LTR שנפגשים מעבר לרווח ניטרלי מתחלפים בסדר — בהסתייגות
+  // של ריף רף הופיע "מד הרוח של Center Surf".
+  const { heText } = await import('../public/js/ui/card.js');
+  assert.equal(heText('מד הרוח של Surf Center — על החוף'),
+    'מד הרוח של <span dir="ltr">Surf Center</span> — על החוף');
+  assert.equal(heText('תחנת TEL AVIV COAST'),
+    'תחנת <span dir="ltr">TEL AVIV COAST</span>');
+  // הרווח נבלע רק בין תווים אלפאנומריים — מקף ונקודת סוף עוצרים אותו
+  assert.equal(heText('הגיע מ-GFS בלבד'), 'הגיע מ-<span dir="ltr">GFS</span> בלבד');
+  assert.equal(heText('IUI — אילת'), '<span dir="ltr">IUI</span> — אילת');
+});
+
+test('שעת מדידה חסרה אינה 1970 — ואינה אפס', async () => {
+  // ⚠️ Number(null) הוא 0, לא NaN. חותמת זמן חסרה שעוברת דרך המרה
+  // סתמית הופכת ל-1.1.1970, ומוצגת כשעה תמימה לגמרי.
+  const { clockHe } = await import('../public/js/ui/card.js');
+  assert.equal(clockHe(null), null);
+  assert.equal(clockHe(undefined), null);
+  assert.equal(clockHe(NaN), null);
+  assert.equal(clockHe(Date.UTC(2026, 7, 20, 10, 0)), '13:00', 'שעון ישראל, לא UTC');
+});
+
+test('פאנל "מאיפה המספר" עונה על מי, מאיפה, מתי, ומה אמר המודל', async () => {
+  const { renderSourcePanel } = await import('../public/js/ui/card.js');
+  const s = LEAD_SPOT();
+  const v = scoreSpot(s, GREEN_FC(), obsOf(), NOON_IL, {}, 0);
+  const html = renderSourcePanel(s, v, { model: 'ecmwf_ifs025', grid: { distanceKm: 4.2 } });
+
+  assert.match(html, /מאיפה המספר/);
+  assert.match(html, /<span dir="ltr">Surf Center<\/span>/, 'מי מדד');
+  assert.match(html, /20 מ׳ מהספוט/, 'מאיפה — 0.02 ק"מ נאמר במטרים');
+  assert.match(html, /נמדד ב-<span dir="ltr">13:00<\/span>/, 'מתי בדיוק');
+  assert.match(html, /ההזנה פעילה/, 'ומה מצב ההזנה');
+  assert.match(html, /התחזית לאותה שעה: <span class="num">17<\/span> קשר/,
+    'מול איזה מספר בדיוק נמדד הפער — לא מול המספר הגדול בכרטיס');
+  assert.match(html, /<span dir="ltr">ECMWF<\/span>/);
+  assert.match(html, /4\.2 ק״מ מהחוף/);
+  assert.match(html, /נמשכה לפני <span class="num">5<\/span> דק׳/);
+});
+
+test('ספוט בלי מדידה חיה אומר זאת, ולא מייצר מקור יש מאין', async () => {
+  const { renderSourcePanel } = await import('../public/js/ui/card.js');
+  const s = LEAD_SPOT();
+  const v = scoreSpot(s, GREEN_FC(), null, NOON_IL, {}, 0);
+  const html = renderSourcePanel(s, v, { model: 'best_match', grid: { distanceKm: 3 } });
+  assert.match(html, /אין מדידה חיה לספוט הזה/);
+  assert.match(html, /<span dir="ltr">ICON<\/span>/, 'best_match נאמר בשם המודל שהוא באמת');
+});
+
+test('אנמומטר שעל החוף אינו "0 ק״מ מהחוף"', async () => {
+  // ⚠️ באג שהיה חי באתר מ-19/8: n(0.02) הוא "0", ולכן ההסתייגות של
+  // ריף רף, אילת צפון, קריית ים וקריית חיים אמרה "0 ק״מ מהחוף" —
+  // מספר שנקרא כשדה חסר ולא כ-20 מטר, דווקא במקום שבו קרבת התחנה
+  // היא כל הטענה. אותה משפחה של Number(null)===0: עיגול שמוחק את
+  // המידע ומשאיר מספר שנראה תקין לגמרי.
+  const { distHe, dec1 } = await import('../public/js/verdict/phrases.he.js');
+  assert.equal(distHe(0.02), '20 מ׳');
+  assert.equal(distHe(0.9), '900 מ׳');
+  assert.equal(distHe(4.2), '4.2 ק״מ');
+  assert.equal(distHe(11.6), '12 ק״מ', 'מעל עשרה — עשירית היא דיוק מדומה');
+  assert.equal(distHe(null), null, 'מרחק חסר אינו אפס');
+  assert.equal(distHe(undefined), null);
+
+  assert.equal(dec1(3), '3', '"פער 3.0 קשר" נקרא כדיוק שאין לנו');
+  assert.equal(dec1(3.7), '3.7');
+
+  // וההסתייגות עצמה, מקצה לקצה
+  const v = scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NOON_IL, {}, 0);
+  const line = v.reason.caveats.find(c => c.includes('נמדד ב'));
+  assert.ok(line, 'ההסתייגות על המדידה חייבת להופיע');
+  assert.ok(!/0 ק״מ/.test(line), `התחנה על החוף אינה במרחק אפס: ${line}`);
+  assert.match(line, /20 מ׳ מהחוף/);
+});
+
+test('⚠️ הסתייגות הן טקסט, לא HTML — תגית בתוכן מודפסת למסך', async () => {
+  // נראה בצילום חי (20/8): שני ערוצי הפלט של phrases.he.js אינם
+  // שווים — buildDetail נכתב כ-HTML גולמי, אבל buildCaveats עובר דרך
+  // heText() שמקודד כל תו. עטיפת span שנפלטה להסתייגות הופיעה
+  // למשתמש כתגית גולמית על המסך, באמצע משפט בטיחות.
+  const cases = [
+    scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf(), NOON_IL, {}, 0),
+    scoreSpot(LEAD_SPOT(), GREEN_FC(), obsOf({ distanceKm: 9.9, source: 'ims' }), NOON_IL, {}, 0),
+    scoreSpot(spot('eilat-reef-raf'), fc({ kt: 18, dir: 0 }), obsOf({ dirDeg: 0 }), NOON_IL, {}, 0),
+    scoreSpot(spot('bat-yam'), fc({ kt: 22, dir: 90 }), null, NOON_IL, {}, 0),
+  ];
+  for (const v of cases) {
+    for (const c of v.reason.caveats) {
+      assert.ok(!/[<>]/.test(c), `הסתייגות עם תגית: ${c}`);
+    }
+  }
+});

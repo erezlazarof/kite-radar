@@ -198,7 +198,10 @@ function render() {
 
   const one = ({ spot, v, grid, model, hours, nowHour }) => {
     const open = state.expanded === spot.id;
-    if (!open) return renderCard(spot, v, { hours, nowHour });
+    // ⚠️ `model` נוסע גם לכרטיס הסגור, לא רק לפאנל: תווית "תחזית ECMWF"
+    // מעל המספר הגדול היא הדבר שארז ביקש, והיא נדרשת בכל 26 הכרטיסים
+    // ולא רק בזה שנפתח.
+    if (!open) return renderCard(spot, v, { hours, nowHour, model });
 
     const extra = {
       grid, model, prefs: state.prefs,
@@ -214,7 +217,7 @@ function render() {
     // אחרת האצבע והציור מדברים על שני צירים שונים.
     state.chartCtx = { spotId: spot.id, hours: extra.allHours, opts: chartOpts(spot, v, extra) };
 
-    return renderCard(spot, v, { hours, nowHour }) + renderDetail(spot, v, extra);
+    return renderCard(spot, v, { hours, nowHour, model }) + renderDetail(spot, v, extra);
   };
 
   host.classList.toggle('grouped', state.region === 'all');

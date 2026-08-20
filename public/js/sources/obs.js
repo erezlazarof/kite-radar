@@ -45,6 +45,11 @@ export function obsForSpot(spot, payload) {
       source: 'meteotech',
       stationName_he: 'תחנת IUI, אילת',
       distanceKm: null,
+      // ⚠️ השדה הזה חסר כאן היה באג שקט: `representative` הוא התנאי
+      // שבו המדידה רשאית להוביל בכרטיס, וענף שלא מציב אותו מחזיר
+      // `undefined` — כלומר גיבוי אילת היה יורד בשקט לרצועה גם כשהוא
+      // המקור החי היחיד. הוא נגזר מהרג'יסטר, כמו בענף השמ"ט.
+      representative: ls.representative === true,
       feed: payload.feed?.eilat || null,
     };
   }

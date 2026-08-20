@@ -6,7 +6,7 @@
    ========================================================================= */
 
 import { compassHe, DIR_CLASS_HE, matchQuiver, kiteRange } from '../verdict/bands.js';
-import { FLAG_HE, n } from '../verdict/phrases.he.js';
+import { FLAG_HE, n, distHe, dec1 } from '../verdict/phrases.he.js';
 import { renderSparklineSVG } from './sparkline.js';
 import { renderCompass } from './compass.js';
 import { renderModelStrip, modelMeanKt } from './modelstrip.js';
@@ -40,7 +40,13 @@ export function heText(str) {
   //
   // נקודה נספרת כחלק מהרצף רק כשאחריה תו לטיני (ims.gov.il), ולא כשהיא
   // נקודת סוף משפט — שם מקומה עם המשפט העברי, בצד שמאל.
-  const LATIN = /[A-Za-z][A-Za-z0-9]*(?:[._%+-][A-Za-z0-9]+)*/g;
+  //
+  // ⚠️ **הרווח שבין שתי מילים לטיניות שייך לרצף.** עד 20/8 עטפה
+  // הפונקציה כל מילה בנפרד, ושני בלוקי LTR שנפגשים מעבר לרווח ניטרלי
+  // מתהפכים: בהסתייגות של ריף רף נראה על המסך "מד הרוח של Center Surf".
+  // הרווח נבלע רק כשמשני צדדיו תווים אלפאנומריים, כך ש-"Center — על"
+  // נעצר לפני המקף.
+  const LATIN = /[A-Za-z][A-Za-z0-9]*(?:(?:[._%+-]|[ ])[A-Za-z0-9][A-Za-z0-9]*)*/g;
   const src = String(str ?? '');
   let out = '', last = 0, m;
   while ((m = LATIN.exec(src)) !== null) {
@@ -51,11 +57,37 @@ export function heText(str) {
 }
 
 /**
- * מחרוזת לטינית שלמה כבלוק LTR **אחד**.
+ * "לפני N דק׳" — אבל אפס דקות אינו "לפני 0 דק׳".
  *
- * ⚠️ `heText()` עוטף כל מילה בנפרד, ושני רצפי LTR שנפגשים מעבר לרווח
- * ניטרלי מתהפכים: "TEL AVIV COAST" נקרא "COAST AVIV TEL". קוד תחנה,
- * שם מודל וכל צירוף לטיני רב-מילי עוברים דרך כאן.
+ * מספר שעוגל לאפס נראה כשדה ריק, לא כ"הרגע". זו אותה משפחה של תקלות
+ * שהפכה 0.02 ק"מ ל-"0 ק״מ": העיגול מוחק את המידע ומשאיר מספר תקין
+ * למראה. אותו כלל, מקום אחר.
+ */
+export function agoHe(min) {
+  if (min == null || !Number.isFinite(min)) return '';
+  return min < 1 ? 'הרגע' : `לפני <span class="num">${n(min)}</span> דק׳`;
+}
+
+/**
+ * שעת המדידה בשעון ישראל, `HH:MM`.
+ *
+ * זה הנתון שארז ביקש במפורש. "לפני 11 דק׳" לבדו הוא הבטחה בלי מקור:
+ * הוא נגזר משעון המכשיר, ואם הוא סוטה — וגם אם ההזנה קפאה — הוא ימשיך
+ * להיראות סביר. שעה מוחלטת ניתנת להצלבה מול שעון הקיר.
+ */
+export function clockHe(tsMs) {
+  if (tsMs == null || !Number.isFinite(tsMs)) return null;
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(tsMs);
+}
+
+/**
+ * מחרוזת שכולה לטינית, כבלוק LTR **אחד**.
+ *
+ * `heText` מזהה את הרצפים בתוך עברית; זו אומרת מראש שהכל לטיני — קוד
+ * תחנה, שם מודל, מזהה. היא לא תלויה בזיהוי, ולכן היא הנכונה כשהמחרוזת
+ * עשויה להכיל תווים שאינם אלפאנומריים ("ECMWF-IFS 0.25°").
  */
 export function ltr(s) {
   return `<span dir="ltr">${esc(s)}</span>`;
@@ -80,6 +112,91 @@ function vsText(m) {
   return `התחזית אמרה ${f}`;
 }
 
+/**
+ * התווית שמעל המספר הגדול — **מה הוא ומאיפה הוא**.
+ *
+ * זו הבקשה של ארז במילים שלו: "לכתוב מה המקור לנתון וזמן מדידה אחרון".
+ * שני המספרים בכרטיס נכונים והם דברים שונים; מה ששבר את האמון היה
+ * שהכרטיס לא אמר איזה מהם הוא איזה, והציג את הפחות אמין בגדול.
+ * מכאן והלאה כל מספר נושא את שמו, בשני המצבים ובאותה צורה.
+ */
+function srcLine(v, extra) {
+  const m = v.measured;
+  if (v.lead === 'measured' && m) {
+    const t = clockHe(m.tsMs);
+    return `<p class="src-line src-live">
+      <span class="m-dot" aria-hidden="true"></span>
+      <span class="src-kind">נמדד</span>
+      <span class="src-bit">${heText(m.stationName_he || 'מד רוח על החוף')}</span>
+      <span class="src-time">${t ? `<span dir="ltr">${esc(t)}</span>` : ''}${
+        m.ageMin != null ? ` · ${agoHe(m.ageMin)}` : ''}</span>
+    </p>`;
+  }
+  if (v.window?.meanKt == null) return '';
+  // ⚠️ שם המודל נלקח מ-modelInfo ולא מ-extra.model הגולמי: ברירת המחדל
+  // היא `best_match`, שאינו שם של מודל אלא בקשה — ובישראל הוא נפתר
+  // ל-ICON. כרטיס שהיה כותב "תחזית best_match" לא היה אומר כלום.
+  const mi = modelInfo(extra.model);
+  return `<p class="src-line">
+    <span class="src-kind">תחזית</span>
+    <span class="src-bit">${ltr(mi.label)}</span>
+    ${v.freshness?.ageMin != null
+      ? `<span class="src-time">נמשכה ${agoHe(v.freshness.ageMin)}</span>` : ''}
+  </p>`;
+}
+
+/**
+ * הרצועה שמתחת למספר הגדול — **המספר השני**, זה שאינו מוביל.
+ * במצב שבו המדידה מובילה, כאן יושבת התחזית; אחרת ההפך. הסימטריה
+ * מכוונת: אותו מבנה, אותה תווית, אותו מקום — רק התוכן מתחלף.
+ */
+function secondStrip(v, extra) {
+  const m = v.measured;
+  const w = v.window || {};
+
+  if (v.lead === 'measured' && m) {
+    const mi = modelInfo(extra.model);
+    return `
+  <div class="measured is-forecast">
+    <div class="m-head">
+      <span class="m-label">תחזית</span>
+      <span class="m-station">${ltr(mi.label)} · החלון הטוב ביותר היום</span>
+      ${w.startHour != null ? `<span class="m-age num" dir="ltr">${hhmmRange(w)}</span>` : ''}
+    </div>
+    <div class="m-body">
+      <span class="m-kt num">${n(w.meanKt)}</span>
+      <span class="m-unit">קשר</span>
+      ${w.gustKt != null ? `<span class="m-gust num">משב ${n(w.gustKt)}</span>` : ''}
+      ${w.hoursRideable > 0
+        ? `<span class="m-vs">${n(w.hoursRideable)} שעות מעל הסף</span>` : ''}
+    </div>
+  </div>`;
+  }
+
+  if (!m) return '';
+  const t = clockHe(m.tsMs);
+  return `
+  <div class="measured">
+    <div class="m-head">
+      <span class="m-dot" aria-hidden="true"></span>
+      <span class="m-label">נמדד</span>
+      <span class="m-station">${heText(m.stationName_he || 'מד רוח על החוף')}</span>
+      <span class="m-age">${t ? `<span dir="ltr">${esc(t)}</span>` : ''}${
+        m.ageMin != null ? ` · ${agoHe(m.ageMin)}` : ''}</span>
+    </div>
+    <div class="m-body">
+      <span class="m-kt num">${n(m.speedKt)}</span>
+      <span class="m-unit">קשר</span>
+      ${m.gustKt != null ? `<span class="m-gust num">משב ${n(m.gustKt)}</span>` : ''}
+      <span class="m-vs ${deltaCls(m.deltaKt)}">${vsText(m)}</span>
+    </div>
+  </div>`;
+}
+
+function hhmmRange(w) {
+  return `${String(w.startHour).padStart(2, '0')}:00–${String(w.endHour).padStart(2, '0')}:00`;
+}
+
 /** חץ כיוון. הקונבנציה: החץ מצביע לאן הרוח *הולכת*, כלומר dirFrom + 180. */
 function arrow(dirDeg) {
   if (dirDeg == null) return '';
@@ -94,6 +211,11 @@ export function renderCard(spot, v, extra = {}) {
   const meta = LEVEL_META[v.level] || LEVEL_META.unknown;
   const w = v.window || {};
   const hasWind = w.meanKt != null;
+
+  // מי מוביל — **החלטה של המנוע**, לא של התצוגה. היא נשענת על
+  // ייצוגיות התחנה, טריות הקריאה, הדרגה ושעת היום, וכולן נבדקות
+  // ב-test/verdict.test.js. הכרטיס רק מרנדר את מה שכבר הוכרע.
+  const leadMeasured = v.lead === 'measured' && v.measured != null;
 
   // רק דגלים קריטיים מגיעים לכרטיס. השאר יורדים לפאנל הפירוט.
   const flags = (v.flags || [])
@@ -119,9 +241,17 @@ export function renderCard(spot, v, extra = {}) {
     <span class="verdict-badge">${esc(meta.label)}</span>
   </header>
 
+  ${srcLine(v, extra)}
+
   <div class="card-main">
     <div class="wind">
-      ${hasWind
+      ${leadMeasured
+        ? `<span class="kt num">${n(v.measured.speedKt)}</span>
+           <span class="wind-meta">
+             <span class="unit">קשר</span>
+             ${v.measured.gustKt != null ? `<span class="gust num">משב ${n(v.measured.gustKt)}</span>` : ''}
+           </span>`
+        : hasWind
         ? `<span class="kt num">${n(w.meanKt)}</span>
            <span class="wind-meta">
              <span class="unit">קשר</span>
@@ -129,13 +259,19 @@ export function renderCard(spot, v, extra = {}) {
            </span>`
         : `<span class="kt num muted">—</span>`}
     </div>
-    ${w.startHour != null ? `
+    ${!leadMeasured && w.startHour != null ? `
     <div class="when">
-      <span class="when-range num" dir="ltr">${String(w.startHour).padStart(2, '0')}:00–${String(w.endHour).padStart(2, '0')}:00</span>
+      <span class="when-range num" dir="ltr">${hhmmRange(w)}</span>
       ${w.hoursRideable > 0
         ? `<span class="when-hours">${n(w.hoursRideable)} שעות מעל הסף</span>`
         : `<span class="when-hours">החלון הטוב ביותר</span>`}
     </div>` : ''}
+    ${/* ⚠️ המצפן נשאר על **כיוון התחזית** גם כשהמדידה מובילה, ובכוונה:
+          הוא הסימן הבטיחותי היחיד במסך, והוא זה שנגזרה ממנו הדרגה.
+          מצפן שמצייר את הכיוון הנמדד ותג "צד-חוף" שנגזר מהחזוי היו
+          שני מקורות שסותרים זה את זה על אותו פיקסל. כשהכיוון הנמדד
+          מסוכן והחזוי לא — `obs_dir_disagrees` מרים צ'יפ, והכיוון
+          הנמדד מופיע במלואו בפאנל "מאיפה המספר". */ ''}
     ${w.dirDeg != null ? `
     <div class="dir">
       ${renderCompass(w.dirDeg, spot, { dirClass: v.dirCls })}
@@ -148,16 +284,7 @@ export function renderCard(spot, v, extra = {}) {
     </div>` : ''}
   </div>
 
-  ${v.measured ? `
-  <div class="measured">
-    <span class="m-dot" aria-hidden="true"></span>
-    <span class="m-label">נמדד עכשיו</span>
-    <span class="m-kt num">${n(v.measured.speedKt)}</span>
-    <span class="m-unit">קשר</span>
-    ${v.measured.gustKt != null ? `<span class="m-gust num">משב ${n(v.measured.gustKt)}</span>` : ''}
-    <span class="m-vs ${deltaCls(v.measured.deltaKt)}">${vsText(v.measured)}</span>
-    ${v.measured.ageMin != null ? `<span class="m-age num">לפני ${n(v.measured.ageMin)} דק׳</span>` : ''}
-  </div>` : ''}
+  ${secondStrip(v, extra)}
 
   ${hasWind && extra.hours?.length ? `
   <div class="spark-wrap">
@@ -206,6 +333,90 @@ export function renderUserSpotActions(spot) {
   </div>`;
 }
 
+/** מצב ההזנה, במילים. קריאה טרייה מהזנה שנפלה היא סתירה שצריך לראות. */
+const FEED_HE = {
+  fresh: 'ההזנה פעילה',
+  stale: 'ההזנה מתעכבת',
+  dead:  'ההזנה מושבתת',
+};
+
+/**
+ * "מאיפה המספר" — הפאנל שארז ביקש.
+ *
+ * המסמך המלא של שני המספרים: מי מדד, מאיזה מרחק, מתי בדיוק, מה מצב
+ * ההזנה, איזה מודל, מאיזו נקודת רשת ומתי נמשכה. זה הסעיף שהופך את
+ * "13 מול 17" מסתירה מביכה למידע — כי אחרי שקוראים אותו רואים ששניהם
+ * נכונים ולמה הם שונים.
+ */
+export function renderSourcePanel(spot, v, extra = {}) {
+  const m = v.measured;
+  const w = v.window || {};
+  const mi = modelInfo(extra.model);
+  const rows = [];
+
+  if (m) {
+    const facts = [];
+    const head = [`<b class="num">${n(m.speedKt)}</b> קשר`];
+    if (m.gustKt != null) head.push(`משב <span class="num">${n(m.gustKt)}</span>`);
+    if (m.dirDeg != null) {
+      head.push(`${esc(compassHe(m.dirDeg))} (<span dir="ltr">${Math.round(m.dirDeg)}°</span>)`);
+    }
+    facts.push(head.join(' · '));
+
+    const when = [];
+    const t = clockHe(m.tsMs);
+    if (t) when.push(`נמדד ב-<span dir="ltr">${esc(t)}</span>`);
+    if (agoHe(m.ageMin)) when.push(agoHe(m.ageMin));
+    const d = distHe(m.distanceKm);
+    if (d) when.push(`${d} מהספוט`);
+    if (FEED_HE[m.feedState]) when.push(FEED_HE[m.feedState]);
+    if (when.length) facts.push(when.join(' · '));
+
+    if (m.forecastAtObsKt != null) {
+      const gap = Math.abs(m.deltaKt);
+      facts.push(`התחזית לאותה שעה: <span class="num">${n(m.forecastAtObsKt)}</span> קשר` +
+        (gap < 2 ? ' — תואם' : ` · פער ${dec1(gap)} קשר`));
+    }
+
+    rows.push(srcRow('נמדד', m.stationName_he || 'מד רוח על החוף', facts, true));
+  } else {
+    rows.push(srcRow('נמדד', 'אין מדידה חיה לספוט הזה',
+      ['הכרטיס נשען על התחזית בלבד.'], false));
+  }
+
+  const fFacts = [];
+  if (w.meanKt != null && w.startHour != null) {
+    fFacts.push(`<b class="num">${n(w.meanKt)}</b> קשר בחלון ` +
+      `<span dir="ltr">${hhmmRange(w)}</span> — הבלוק הרצוף הטוב ביותר היום`);
+  }
+  const gridBits = [];
+  if (extra.grid?.distanceKm != null) {
+    gridBits.push(`נקודת רשת ${distHe(extra.grid.distanceKm)} מהחוף`);
+  }
+  if (mi.resKm) gridBits.push(`רזולוציה כ-<span dir="ltr">${mi.resKm}</span> ק״מ`);
+  if (v.freshness?.ageMin != null) {
+    gridBits.push(`נמשכה ${agoHe(v.freshness.ageMin)}`);
+  }
+  if (gridBits.length) fFacts.push(gridBits.join(' · '));
+  // המודל נאמר בשם תמיד בפאנל הזה — כאן דווקא **המקור** הוא הנושא.
+  // בכרטיס הוא נאמר בקצרה; מי שפתח את הפאנל בא לדעת.
+  if (!mi.isDefault && spot.models?.reason_he) fFacts.push(heText(spot.models.reason_he));
+
+  rows.push(srcRow('תחזית', mi.label, fFacts, false));
+
+  return `<h3 class="d-h">מאיפה המספר</h3><div class="srcbox">${rows.join('')}</div>`;
+}
+
+function srcRow(tag, title, facts, live) {
+  return `<div class="srcbox-row">
+    <span class="srcbox-tag${live ? ' is-live' : ''}">${esc(tag)}</span>
+    <div class="srcbox-body">
+      <p class="srcbox-title">${heText(title)}</p>
+      ${facts.map(f => `<p class="srcbox-fact">${f}</p>`).join('')}
+    </div>
+  </div>`;
+}
+
 /**
  * מפרט המטאוגרם. מיוצא כי הסקראבר חייב להאכיל את chartHitTest
  * *באותם* opts שבהם צויר הגרף — אחרת האצבע והציור מדברים על צירים שונים.
@@ -250,19 +461,7 @@ export function renderDetail(spot, v, extra = {}) {
     rows.push(`<p class="d-basis" dir="ltr" lang="en">${esc(spot.shore_normal_basis)}</p>`);
   }
 
-  if (extra.grid) {
-    // המודל נאמר בשם רק כשהוא **אינו** ברירת המחדל. בכל שאר הספוטים זו
-    // רעש: אף אחד לא בא לכאן לקרוא שמות מודלים. אבל בספוט שהרג'יסטר
-    // הסיט ממנו את ברירת המחדל, המספר בכרטיס מגיע ממקום אחר — ואי-אמירה
-    // שלו הופכת את רצועת ההשוואה מתחתיו לבלתי ניתנת לפענוח.
-    const mi = modelInfo(extra.model);
-    rows.push(`<p class="d-src">התחזית היא לנקודת רשת במרחק <span dir="ltr">${extra.grid.distanceKm.toFixed(1)}</span> ק"מ מהחוף` +
-      (mi.resKm ? `, ברזולוציה של כ-<span dir="ltr">${mi.resKm}</span> ק"מ` : '') +
-      (mi.isDefault ? '' : `, לפי <span dir="ltr">${esc(mi.label)}</span>`) + '.</p>');
-    if (!mi.isDefault && spot.models?.reason_he) {
-      rows.push(`<p class="d-src d-muted">${heText(spot.models.reason_he)}</p>`);
-    }
-  }
+  rows.push(renderSourcePanel(spot, v, extra));
 
   // ----- השוואת מודלים -----
   if (extra.models !== undefined && v.window) {

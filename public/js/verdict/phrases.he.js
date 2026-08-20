@@ -19,6 +19,35 @@ export const range = (a, b) => `<span dir="ltr">${Math.round(a)}–${Math.round(
 export const hhmm = h => `<span dir="ltr">${String(h).padStart(2, '0')}:00</span>`;
 
 /**
+ * מרחק. מתחת לקילומטר — במטרים.
+ *
+ * ⚠️ באג שהיה חי: `n(0.02)` הוא `"0"`, ולכן ההסתייגות של ריף רף ושל
+ * קריית ים אמרה **"0 ק״מ מהחוף"** — מספר שנקרא כשדה חסר ולא כ-20 מטר,
+ * דווקא במקום שבו הקרבה של האנמומטר היא כל העניין. אותה משפחה של
+ * `Number(null) === 0`: עיגול שמוחק את המידע ומשאיר מספר שנראה תקין.
+ *
+ * ⚠️⚠️ **טקסט, לא HTML.** שני ערוצי הפלט של המודול הזה אינם שווים:
+ * `buildDetail` נכתב לדף כ-HTML גולמי, אבל `buildCaveats` עובר דרך
+ * `heText()` שמקודד כל תו — ולכן `<span dir="ltr">` שנפלט לכאן מופיע
+ * למשתמש **כתגית מודפסת על המסך**. זה נראה חי בצילום של 20/8. מספר
+ * בודד בעברית אינו מתהפך גם בלי עטיפה (ראה `n`), ולכן אין בה צורך;
+ * העטיפה נדרשת ל**טווחים** בלבד (חוק ברזל 8), וזה מה ש-`range` עושה.
+ */
+export const distHe = km => {
+  if (km == null || !Number.isFinite(km)) return null;
+  return km < 1
+    ? `${Math.round(km * 1000)} מ׳`
+    : `${km < 10 ? km.toFixed(1) : Math.round(km)} ק״מ`;
+};
+
+/** מספר עשרוני בלי ".0" מיותר — "פער 3.0 קשר" נקרא כדיוק שאין לנו */
+export const dec1 = v => {
+  if (v == null) return '—';
+  const r = Math.round(v * 10) / 10;
+  return Number.isInteger(r) ? String(Math.round(r)) : r.toFixed(1);
+};
+
+/**
  * דגלים.  severity קובע איפה הדגל מופיע:
  *   'critical' → צ'יפ על הכרטיס, תמיד, גם כשהמספר טוב.
  *   'note'     → שורה בפאנל הפירוט בלבד.
@@ -138,7 +167,7 @@ export function buildCaveats(v, spot) {
       `נמדד ב${m.stationName_he || 'תחנה הקרובה'}: ${n(m.speedKt)} קשר` +
       (m.gustKt != null ? `, משב ${n(m.gustKt)}` : '') +
       (m.ageMin != null ? ` (לפני ${n(m.ageMin)} דקות` : '') +
-      (m.distanceKm != null ? `, ${n(m.distanceKm)} ק״מ מהחוף)` : m.ageMin != null ? ')' : '') +
+      (distHe(m.distanceKm) ? `, ${distHe(m.distanceKm)} מהחוף)` : m.ageMin != null ? ')' : '') +
       (Math.abs(m.deltaKt) >= 2
         ? ` — ${n(Math.abs(m.deltaKt))} קשר ${sign} מהתחזית.`
         : ' — תואם לתחזית.')
