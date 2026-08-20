@@ -11,7 +11,8 @@
 
 * לפתוח **חלון PowerShell אחד** ולהשאיר אותו פתוח עד הסוף. המשתנים (`$w`, `$secret`, `$token`) חיים בחלון, ונסגרים איתו.
 * ב-PowerShell 5.1 **אין `&&`**. כל פקודה בשורה נפרדת. אם משהו נכשל — לעצור, לא להמשיך לשורה הבאה.
-* כל הפקודות רצות מתוך `<repo>\worker`.
+* כל הפקודות רצות מתוך תיקיית `worker` שבשורש הריפו. `$REPO` בפקודות = הנתיב
+  שבו שכפלת את הריפו; להגדיר פעם אחת בחלון לפני שמתחילים.
 
 | מה | פעולה |
 |---|---|
@@ -32,12 +33,10 @@ $w = "$env:APPDATA\npm\wrangler.cmd"
 & $w --version
 ```
 
-`$env:APPDATA` כאן הוא `%APPDATA%`, כלומר הנתיב המלא הוא
-`%APPDATA%\npm\wrangler.cmd`.
 אם השורה השנייה מחזירה מספר גרסה — מוכן. אם היא מחזירה שגיאה, ההתקנה לא הצליחה.
 
 ```powershell
-Set-Location "<repo>\worker"
+Set-Location "$REPO\worker"
 ```
 
 ---
@@ -95,7 +94,7 @@ binding = "KITE_SUBS"
 id = "3f9c2b1a4e5d6f708192a3b4c5d6e7f8"
 ```
 
-לפתוח את `<repo>\worker\wrangler.toml`,
+לפתוח את `worker\wrangler.toml` שבשורש הריפו,
 למצוא את השורה שכתוב בה `REPLACE_WITH_ID_FROM_WRANGLER_KV_NAMESPACE_CREATE`,
 ולהחליף **רק את מה שבין המרכאות** ב-id שהפקודה הדפיסה. לשמור.
 
@@ -239,12 +238,12 @@ curl.exe -s "http://127.0.0.1:8787/__scheduled"
 ## שגרה — אחרי כל שינוי בקוד ה-Worker
 
 ```powershell
-Set-Location "<repo>"
+Set-Location "$REPO"
 npm test
 ```
 
 ```powershell
-Set-Location "<repo>\worker"
+Set-Location "$REPO\worker"
 & $w deploy
 ```
 
@@ -254,7 +253,7 @@ Set-Location "<repo>\worker"
 
 ## פיתוח מקומי (לא חובה)
 
-ליצור `<repo>\worker\.dev.vars` עם שתי שורות:
+ליצור `worker\.dev.vars` עם שתי שורות:
 
 ```
 TG_BOT_TOKEN=123456789:AAH...
